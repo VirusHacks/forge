@@ -16,6 +16,22 @@ function surface(pick: (hunks: number) => number[] | undefined, during?: () => P
     reveal() { /* no view in tests */ },
     async requestReview(_run, request) { await during?.(); return pick(request.hunks.length); },
     reviewApplied(_run, outcome) { results.push(outcome); },
+    decide() { /* sidebar-driven tests decide through pick() */ },
+    hunkStates() { /* no view */ },
+  };
+}
+
+/** A surface whose review is settled by in-editor decisions (CodeLens commands). */
+function editorSurface(onRequest: (reviewId: string) => void): ReviewSurface & { states: number[][] } {
+  let settle: ((v: number[] | undefined) => void) | undefined;
+  const states: number[][] = [];
+  return {
+    states,
+    reveal() {},
+    requestReview(_run, request) { return new Promise(resolve => { settle = resolve; setTimeout(() => onRequest(request.reviewId), 10); }); },
+    reviewApplied() {},
+    decide(_id, indices) { settle?.(indices); },
+    hunkStates(_id, accepted) { states.push(accepted); },
   };
 }
 
@@ -28,7 +44,7 @@ suite("Forge extension", () => {
     assert.ok(extension);
     await extension.activate();
     const commands = await vscode.commands.getCommands(true);
-    for (const id of ["forge.inlineEdit", "forge.focus", "forge.stop", "forge.undoLastApply", "forge.environmentStatus"]) assert.ok(commands.includes(id), id);
+    for (const id of ["forge.inlineEdit", "forge.focus", "forge.stop", "forge.undoLastApply", "forge.environmentStatus", "forge.hunkAccept", "forge.hunkReject", "forge.reviewApply", "forge.reviewRejectAll"]) assert.ok(commands.includes(id), id);
   });
 
   test("reports an unreachable backend without throwing", async () => {
@@ -49,6 +65,24 @@ suite("Forge extension", () => {
       assert.ok(applied.includes("return 30") && applied.includes("return 1\n"), "only the second hunk is applied and saved");
       assert.match(await reviews.undoLast(), /Restored 1 file/);
       assert.equal(await readFile(file, "utf8"), BASE);
+      reviews.dispose();
+    } finally { await rm(root, { recursive: true, force: true }); }
+  });
+
+  test("hunks accepted and rejected inside the diff editor apply automatically", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "forge-review-"));
+    try {
+      const file = path.join(root, "m.py");
+      await writeFile(file, BASE);
+      let reviews!: ReviewController;
+      // Exactly what the CodeLens buttons do: one decision per hunk; the last one applies.
+      const s = editorSurface(id => { reviews.decideHunk(id, 0, false); reviews.decideHunk(id, 1, true); });
+      reviews = new ReviewController(s);
+      const outcome = await reviews.review("run", root, { title: "t", files: [{ path: "m.py", base: BASE, next: NEXT }] }, new AbortController().signal);
+      assert.deepEqual(outcome.selected, [1]);
+      const applied = await readFile(file, "utf8");
+      assert.ok(applied.includes("return 30") && applied.includes("return 1\n"), "only the hunk accepted in the editor is applied");
+      assert.deepEqual(s.states.at(-1), [1], "the sidebar is told which hunks are accepted");
       reviews.dispose();
     } finally { await rm(root, { recursive: true, force: true }); }
   });

@@ -15,8 +15,10 @@ type ClientMessage =
   | { type: "ready" } | { type: "start"; task: string; model: string; mentions: string[] } | { type: "stop"; runId: string }
   | { type: "decision"; reviewId: string; indices: number[] } | { type: "openHunk"; reviewId: string; index: number }
   | { type: "openFile"; path: string; line?: number } | { type: "openUrl"; url: string } | { type: "select"; runId: string }
-  | { type: "models" } | { type: "model"; model: string } | { type: "attachFile" } | { type: "attachSymbol" } | { type: "undo" } | { type: "newChat" }
-  | { type: "copy"; text: string };
+  | { type: "models" } | { type: "model"; model: string } | { type: "clearHistory" } | { type: "attachFile" } | { type: "attachSymbol" } | { type: "undo" } | { type: "newChat" }
+  | { type: "copy"; text: string } | { type: "toggleHunk"; reviewId: string; index: number; accepted: boolean };
+
+const HISTORY_KEY = "forge.runHistory.v1";
 
 interface PendingReview { runId: string; reviewId: string; count: number; resolve: (v: number[] | undefined) => void }
 
@@ -35,12 +37,29 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
   onStop?: (runId: string) => void;
   onOpenHunk?: (reviewId: string, index: number) => void;
   onUndo?: () => Promise<string>;
+  onToggleHunk?: (reviewId: string, index: number, accepted: boolean) => void;
   onRefreshModels?: () => Promise<{ models: string[]; error?: string }>;
   onPickFile?: () => Promise<string | undefined>;
   onPickSymbol?: () => Promise<string | undefined>;
 
   constructor(private readonly context: vscode.ExtensionContext) {
     this.model = context.globalState.get<string>("forge.lastModel") ?? "";
+    // Restore run history for this workspace; a run that was live when the window closed is marked as interrupted.
+    const saved = context.workspaceState.get<Run[]>(HISTORY_KEY) ?? [];
+    this.runs = saved.filter(r => r && typeof r.id === "string" && Array.isArray(r.events)).map(r => r.status === "running"
+      ? { ...r, status: "cancelled" as const, events: [...r.events, { type: "run.end", status: "cancelled", message: "The window closed during this run; nothing was applied." } as UiEvent] }
+      : r);
+    this.current = this.runs.at(-1)?.id;
+  }
+
+  /** Persist a compact copy of the history (long previews trimmed, at most 25 runs). */
+  private saveHistory() {
+    const compact = this.runs.slice(-25).map(r => ({ ...r, events: r.events.slice(-400).map(e => {
+      const c: Record<string, unknown> = { ...e };
+      for (const k of ["preview", "text", "summary"]) if (typeof c[k] === "string" && (c[k] as string).length > 4000) c[k] = (c[k] as string).slice(0, 4000) + "…";
+      return c as UiEvent;
+    }) }));
+    void this.context.workspaceState.update(HISTORY_KEY, compact).then(undefined, () => undefined);
   }
 
   get selectedModel() { return this.model; }
@@ -68,6 +87,7 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
     this.runs = [...this.runs, run].slice(-25);
     this.current = run.id;
     this.postState();
+    this.saveHistory();
     return run.id;
   }
 
@@ -96,6 +116,7 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
     if (this.pending?.runId === runId) { this.pending.resolve(undefined); this.pending = undefined; }
     this.event(runId, { type: "run.end", status, message });
     run.status = status;
+    this.saveHistory();
     setTimeout(() => this.postState(), 40);
   }
 
@@ -113,6 +134,20 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
       this.postState();
       this.reveal();
     });
+  }
+
+  /** Settle the pending review from the diff editor (CodeLens / title buttons). */
+  decide(reviewId: string, indices: number[] | undefined) {
+    const p = this.pending;
+    if (!p || p.reviewId !== reviewId) return;
+    this.pending = undefined;
+    p.resolve(indices?.length ? [...new Set(indices)] : undefined);
+    this.postState();
+  }
+
+  /** Mirror per-hunk decisions made in the diff editor into the review card. */
+  hunkStates(reviewId: string, accepted: number[], decided: number[]) {
+    void this.view?.webview.postMessage({ type: "hunkStates", reviewId, accepted, decided });
   }
 
   /** Test hook: accept every hunk of the pending review, as a user clicking "Accept all" would. */
@@ -160,6 +195,7 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
       case "model": if (typeof msg.model === "string" && this.models.includes(msg.model)) { this.model = msg.model; await this.context.globalState.update("forge.lastModel", msg.model); } break;
       case "select": if (this.runs.some(r => r.id === msg.runId)) { this.current = msg.runId; this.postState(); } break;
       case "newChat": this.current = undefined; this.postState(); break;
+      case "clearHistory": if (!this.busy) { this.runs = []; this.current = undefined; this.saveHistory(); this.postState(); } break;
       case "start": {
         if (typeof msg.task !== "string" || !msg.task.trim() || msg.task.length > 8000) return this.notice("Describe the change you want.");
         if (typeof msg.model !== "string" || !this.models.includes(msg.model)) return this.notice("Choose a model configured in TrueForge.");
@@ -194,6 +230,7 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
       case "attachFile": { const value = await this.onPickFile?.(); if (value) void this.view?.webview.postMessage({ type: "mention", value }); break; }
       case "attachSymbol": { const value = await this.onPickSymbol?.(); if (value) void this.view?.webview.postMessage({ type: "mention", value }); break; }
       case "undo": { const message = await this.onUndo?.(); if (message) this.notice(message); break; }
+      case "toggleHunk": if (this.pending?.reviewId === msg.reviewId && Number.isInteger(msg.index)) this.onToggleHunk?.(msg.reviewId, msg.index, Boolean(msg.accepted)); break;
       case "copy": if (typeof msg.text === "string" && msg.text.length < 50_000) await vscode.env.clipboard.writeText(msg.text); break;
     }
   }

@@ -22,19 +22,87 @@ export interface ReviewSurface {
   requestReview(runId: string, request: { reviewId: string; hunks: ReviewHunkSummary[]; summary?: string; verification?: VerificationSummary; note?: string }, signal: AbortSignal): Promise<number[] | undefined>;
   reviewApplied(runId: string, outcome: { applied: boolean; files: string[]; hunks: number }): void;
   reveal(): void;
+  /** Settle the pending review from the editor (same effect as the sidebar's buttons). */
+  decide(reviewId: string, indices: number[] | undefined): void;
+  /** Keep the sidebar's checkboxes in sync with decisions made in the diff editor. */
+  hunkStates(reviewId: string, accepted: number[], decided: number[]): void;
 }
 
-interface FileHunk extends LineHunk { index: number; path: string; local: number }
+interface FileHunk extends LineHunk { index: number; path: string; local: number; /** 0-based first line in the proposed document. */ nextLine: number }
+interface HunkState { accepted: boolean; decided: boolean }
 const SCHEME = "forge-review";
 
 export class ReviewController implements vscode.Disposable {
   private readonly contents = new Map<string, string>();
   private readonly provider: vscode.Disposable;
-  private readonly active = new Map<string, { root: string; files: ProposalFile[]; hunks: FileHunk[] }>();
+  private readonly active = new Map<string, { root: string; files: ProposalFile[]; hunks: FileHunk[]; states: HunkState[] }>();
+  private readonly lensChanged = new vscode.EventEmitter<void>();
+  private readonly lenses: vscode.Disposable;
   private lastApplied?: { root: string; files: { path: string; before: string | null; after: string }[] };
 
   constructor(private readonly surface: ReviewSurface) {
     this.provider = vscode.workspace.registerTextDocumentContentProvider(SCHEME, { provideTextDocumentContent: uri => this.contents.get(uri.toString()) ?? "" });
+    // Accept / Reject buttons on every hunk, inside the diff editor itself.
+    this.lenses = vscode.languages.registerCodeLensProvider({ scheme: SCHEME }, { onDidChangeCodeLenses: this.lensChanged.event, provideCodeLenses: doc => this.codeLenses(doc) });
+  }
+
+  private codeLenses(doc: vscode.TextDocument): vscode.CodeLens[] {
+    const [reviewId, side] = doc.uri.query.split(":");
+    const review = this.active.get(reviewId);
+    if (!review || side !== "next") return [];
+    const file = doc.uri.path.slice(1);
+    const mine = review.hunks.filter(h => h.path === file);
+    return mine.flatMap(h => {
+      const st = review.states[h.index], line = Math.min(h.nextLine, Math.max(0, doc.lineCount - 1)), at = new vscode.Range(line, 0, line, 0);
+      const label = `Hunk ${h.index + 1}/${review.hunks.length}`;
+      if (!st.decided) return [
+        new vscode.CodeLens(at, { title: `✓ Accept ${label}`, command: "forge.hunkAccept", arguments: [reviewId, h.index] }),
+        new vscode.CodeLens(at, { title: "✕ Reject", command: "forge.hunkReject", arguments: [reviewId, h.index] }),
+      ];
+      return [new vscode.CodeLens(at, st.accepted
+        ? { title: `✓ ${label} accepted — click to reject`, command: "forge.hunkReject", arguments: [reviewId, h.index] }
+        : { title: `✕ ${label} rejected — click to accept`, command: "forge.hunkAccept", arguments: [reviewId, h.index] })];
+    });
+  }
+
+  /** The review shown in the active editor, if any. */
+  private activeReviewId(): string | undefined {
+    const uri = vscode.window.activeTextEditor?.document.uri;
+    return uri?.scheme === SCHEME ? uri.query.split(":")[0] : [...this.active.keys()].at(-1);
+  }
+
+  /**
+   * Record a decision for one hunk (from the editor or the sidebar). When every hunk has been
+   * decided in the editor, the accepted ones are applied automatically.
+   */
+  decideHunk(reviewId: string | undefined, index: number | undefined, accepted: boolean, source: "editor" | "sidebar" = "editor") {
+    reviewId ??= this.activeReviewId();
+    const review = reviewId ? this.active.get(reviewId) : undefined;
+    if (!review) return;
+    if (index === undefined) {
+      const editor = vscode.window.activeTextEditor, file = editor?.document.uri.path.slice(1), line = editor?.selection.active.line ?? 0;
+      index = review.hunks.find(h => h.path === file && line >= h.nextLine && line < h.nextLine + Math.max(1, h.added.length))?.index
+        ?? review.hunks.find(h => h.path === file && !review.states[h.index].decided)?.index;
+    }
+    if (index === undefined || !review.states[index]) return;
+    review.states[index] = { accepted, decided: source === "editor" ? true : review.states[index].decided };
+    this.lensChanged.fire();
+    this.surface.hunkStates(reviewId!, review.states.flatMap((s, i) => (s.accepted ? [i] : [])), review.states.flatMap((s, i) => (s.decided ? [i] : [])));
+    if (source === "editor" && review.states.every(s => s.decided)) this.applyDecisions(reviewId);
+  }
+
+  /** Apply whatever is currently accepted (editor title button, keybinding or last decision). */
+  applyDecisions(reviewId?: string) {
+    reviewId ??= this.activeReviewId();
+    const review = reviewId ? this.active.get(reviewId) : undefined;
+    if (!review) return;
+    const accepted = review.states.flatMap((s, i) => (s.accepted ? [i] : []));
+    this.surface.decide(reviewId!, accepted.length ? accepted : undefined);
+  }
+
+  rejectAll(reviewId?: string) {
+    reviewId ??= this.activeReviewId();
+    if (reviewId && this.active.has(reviewId)) this.surface.decide(reviewId, undefined);
   }
 
   get canUndo() { return Boolean(this.lastApplied); }
@@ -44,10 +112,14 @@ export class ReviewController implements vscode.Disposable {
     const reviewId = randomUUID();
     const hunks: FileHunk[] = [];
     for (const file of proposal.files) {
-      diffLines(file.base ?? "", file.next).forEach((h, local) => hunks.push({ ...h, index: hunks.length, path: file.path, local }));
+      let shift = 0;
+      diffLines(file.base ?? "", file.next).forEach((h, local) => {
+        hunks.push({ ...h, index: hunks.length, path: file.path, local, nextLine: h.startLine + shift });
+        shift += h.added.length - h.removed.length;
+      });
     }
     if (!hunks.length) return declined;
-    this.active.set(reviewId, { root, files: proposal.files, hunks });
+    this.active.set(reviewId, { root, files: proposal.files, hunks, states: hunks.map(() => ({ accepted: true, decided: false })) });
     const tabs: vscode.Uri[] = [];
     try {
       for (const file of proposal.files) {
@@ -57,7 +129,7 @@ export class ReviewController implements vscode.Disposable {
         this.contents.set(next.toString(), file.next);
         tabs.push(next);
       }
-      // Open every proposed file as a diff. The sidebar holds the per-hunk decisions.
+      // Open every proposed file as a diff. Decisions can be made per hunk in the diff (CodeLens) or in the sidebar.
       for (const [i, file] of proposal.files.entries()) await this.openDiff(reviewId, file.path, i === 0);
       this.surface.reveal();
       const summaries: ReviewHunkSummary[] = hunks.map(h => ({
@@ -72,6 +144,7 @@ export class ReviewController implements vscode.Disposable {
       return { applied: true, selected, files };
     } finally {
       this.active.delete(reviewId);
+      this.lensChanged.fire();
       await closeTabs(tabs);
       for (const uri of tabs) { this.contents.delete(uri.toString()); this.contents.delete(uri.with({ query: uri.query.replace(/:next$/, ":base") }).toString()); }
     }
@@ -159,7 +232,7 @@ export class ReviewController implements vscode.Disposable {
     return skipped.length ? `Restored ${restored.length} file(s). Skipped ${skipped.join(", ")} because it changed after the edit.` : `Restored ${restored.length} file(s) to their previous content.`;
   }
 
-  dispose() { this.provider.dispose(); this.contents.clear(); }
+  dispose() { this.provider.dispose(); this.lenses.dispose(); this.lensChanged.dispose(); this.contents.clear(); }
 }
 
 function lineOffsets(text: string): number[] {

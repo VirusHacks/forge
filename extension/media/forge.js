@@ -187,7 +187,7 @@
     box(fx, fy, g.focus, "g-focus");
     const wrap = h("div", "graph-wrap");
     const head = h("div", "graph-head");
-    head.append(h("span", "card-icon", "⌬"), h("span", "", "Code graph"), h("span", "muted small", "RepoMap · callers → focus → calls / tests"));
+    head.append(h("span", "card-icon", "⌬"), h("span", "", "Code graph"), h("span", "muted small", `RepoMap · callers → focus → calls / tests${g.verifiedEdges !== undefined ? ` · ${g.verifiedEdges} edge${g.verifiedEdges === 1 ? "" : "s"} verified at call sites` : ""}`));
     wrap.append(head, svg);
     return wrap;
   }
@@ -200,6 +200,7 @@
     head.append(h("span", "card-icon", "⊟"), h("span", "card-title", "Review changes"), h("span", "muted", `${item.hunks.length} hunks · ${files.length} files`));
     card.append(head);
     if (item.summary) { const s = h("div", "md review-summary"); markdown(s, item.summary); card.append(s); }
+    if (pending) card.append(h("div", "muted small", "Decide here, or with ✓ Accept / ✕ Reject above each hunk in the diff editor (⌘⌥Y / ⌘⌥N)."));
     if (item.verification) {
       const ok = item.verification.exitCode === 0;
       const badge = h("div", "verify " + (item.verification.stale ? "verify-stale" : ok ? "verify-ok" : "verify-fail"));
@@ -210,9 +211,11 @@
       const row = h("div", "hunk");
       const top = h("label", "hunk-top");
       const box = h("input"); box.type = "checkbox"; box.checked = item.checked.has(hunk.index); box.disabled = !pending;
-      box.addEventListener("change", () => { box.checked ? item.checked.add(hunk.index) : item.checked.delete(hunk.index); updateCount(); });
+      box.dataset.index = String(hunk.index);
+      box.addEventListener("change", () => { box.checked ? item.checked.add(hunk.index) : item.checked.delete(hunk.index); updateCount(); send({ type: "toggleHunk", reviewId: item.reviewId, index: hunk.index, accepted: box.checked }); });
       top.append(box, h("span", "path mono", `${hunk.path}:${hunk.line}`), h("span", "add", `+${hunk.added}`), h("span", "del", `−${hunk.removed}`));
       if (hunk.newFile) top.append(h("span", "chip", "new file"));
+      if (item.decided_ && item.decided_.has(hunk.index)) top.append(h("span", "chip " + (item.checked.has(hunk.index) ? "chip-ok" : "chip-no"), item.checked.has(hunk.index) ? "accepted in diff" : "rejected in diff"));
       const open = btn("Diff", e => { e.preventDefault(); send({ type: "openHunk", reviewId: item.reviewId, index: hunk.index }); }, "small-btn", "Show this hunk in the diff editor");
       top.append(open);
       const pre = h("pre", "hunk-preview");
@@ -223,6 +226,8 @@
     const accept = btn("", () => { send({ type: "decision", reviewId: item.reviewId, indices: [...item.checked] }); item.decided = true; }, "primary");
     const reject = btn("Reject all", () => { send({ type: "decision", reviewId: item.reviewId, indices: [] }); item.decided = true; }, "secondary");
     const all = btn("Select all", () => { item.hunks.forEach(x => item.checked.add(x.index)); card.querySelectorAll("input[type=checkbox]").forEach(c => { c.checked = true; }); updateCount(); }, "link");
+    card.dataset.review = item.reviewId;
+    item.refresh = updateCount;
     function updateCount() { accept.textContent = `Accept ${item.checked.size} of ${item.hunks.length}`; accept.disabled = !pending || item.checked.size === 0; }
     updateCount();
     if (pending) actions.append(accept, reject, all);
@@ -352,6 +357,14 @@
       if (data.runId === state.current && !frame) frame = requestAnimationFrame(flushRender);
     } else if (data.type === "mention") {
       if (!mentions.includes(data.value)) mentions.push(data.value); persist(); renderAll();
+    } else if (data.type === "hunkStates") {
+      // Decisions made with the Accept / Reject buttons inside the diff editor.
+      for (const v of views.values()) {
+        const item = v.reviews.get(data.reviewId);
+        if (!item) continue;
+        item.checked = new Set(data.accepted); item.decided_ = new Set(data.decided); item.dirty = true;
+        if (!frame) frame = requestAnimationFrame(flushRender);
+      }
     } else if (data.type === "toast") {
       const t = h("div", "toast", data.text); document.body.append(t); setTimeout(() => t.remove(), 4000);
     }

@@ -43,6 +43,26 @@
       {
         "command": "forge.environmentStatus",
         "title": "Forge: Environment Status"
+      },
+      {
+        "command": "forge.hunkAccept",
+        "title": "Forge: Accept Hunk",
+        "icon": "$(check)"
+      },
+      {
+        "command": "forge.hunkReject",
+        "title": "Forge: Reject Hunk",
+        "icon": "$(close)"
+      },
+      {
+        "command": "forge.reviewApply",
+        "title": "Forge: Apply Accepted Hunks",
+        "icon": "$(check-all)"
+      },
+      {
+        "command": "forge.reviewRejectAll",
+        "title": "Forge: Reject All Hunks",
+        "icon": "$(discard)"
       }
     ],
     "keybindings": [
@@ -57,6 +77,18 @@
         "key": "ctrl+alt+.",
         "mac": "cmd+alt+.",
         "when": "!inQuickOpen"
+      },
+      {
+        "command": "forge.hunkAccept",
+        "key": "ctrl+alt+y",
+        "mac": "cmd+alt+y",
+        "when": "resourceScheme == forge-review"
+      },
+      {
+        "command": "forge.hunkReject",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n",
+        "when": "resourceScheme == forge-review"
       }
     ],
     "menus": {
@@ -65,6 +97,36 @@
           "command": "forge.inlineEdit",
           "when": "editorTextFocus",
           "group": "navigation@9"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "forge.reviewApply",
+          "when": "resourceScheme == forge-review",
+          "group": "navigation@1"
+        },
+        {
+          "command": "forge.reviewRejectAll",
+          "when": "resourceScheme == forge-review",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "forge.hunkAccept",
+          "when": "resourceScheme == forge-review"
+        },
+        {
+          "command": "forge.hunkReject",
+          "when": "resourceScheme == forge-review"
+        },
+        {
+          "command": "forge.reviewApply",
+          "when": "resourceScheme == forge-review"
+        },
+        {
+          "command": "forge.reviewRejectAll",
+          "when": "resourceScheme == forge-review"
         }
       ]
     },
@@ -220,6 +282,9 @@
           "type": "webview"
         }
       ]
+    },
+    "configurationDefaults": {
+      "diffEditor.codeLens": true
     }
   },
   "scripts": {

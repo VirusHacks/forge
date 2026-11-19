@@ -83,6 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
   sidebar.onStop = runId => running.get(runId)?.abort();
   sidebar.onOpenHunk = (reviewId, index) => void reviews.revealHunk(reviewId, index);
   sidebar.onUndo = () => reviews.undoLast();
+  sidebar.onToggleHunk = (reviewId, index, accepted) => reviews.decideHunk(reviewId, index, accepted, "sidebar");
   sidebar.onPickFile = async () => {
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
     if (!root) return;
@@ -188,6 +189,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("forge.inlineEdit", inlineEdit),
+    // Per-hunk decisions inside the diff editor (CodeLens, title buttons, keybindings).
+    vscode.commands.registerCommand("forge.hunkAccept", (reviewId?: string, index?: number) => reviews.decideHunk(reviewId, index, true)),
+    vscode.commands.registerCommand("forge.hunkReject", (reviewId?: string, index?: number) => reviews.decideHunk(reviewId, index, false)),
+    vscode.commands.registerCommand("forge.reviewApply", () => reviews.applyDecisions()),
+    vscode.commands.registerCommand("forge.reviewRejectAll", () => reviews.rejectAll()),
     vscode.commands.registerCommand("forge.stop", () => { for (const c of running.values()) c.abort(); }),
     vscode.commands.registerCommand("forge.undoLastApply", async () => vscode.window.showInformationMessage(`Forge: ${await reviews.undoLast()}`)),
     vscode.commands.registerCommand("forge.focus", () => sidebar.reveal()),
