@@ -1,137 +1,134 @@
-# TrueFoundry Forge-a-thon Phase 0
+# Forge
 
-This workspace contains a TrueForge-powered VS Code Task A vertical slice. TrueForge owns the agent turn; the extension exposes read-only workspace MCP tools, streams the response, renders a proposed single-function hunk in the diff editor, and writes only after explicit approval. It does not implement a separate agent loop.
+**An AI coding agent inside VS Code that reads a large codebase, changes several files for you, tests its own work, and lets you approve every change before anything is saved. The agent runs on [TrueForge](https://github.com/truefoundry/trueforge).**
 
-## Layout
+Built by **Team Husttlers** for the TrueFoundry Forge-a-thon at Techfest, IIT Bombay ([competition brief](task.md)).
+
+---
+
+## The idea in one minute
+
+AI coding tools usually fail in three ways: they read the wrong code, they change things you did not ask for, and they stop working when the AI service has a bad moment. Forge tackles each one:
+
+| Problem | What Forge does |
+|---|---|
+| *"It looked at the wrong files."* | Before the AI starts, Forge picks the relevant files itself, using text search plus a **code graph** (which function calls which, and which tests cover it). The sidebar shows the chosen files and the reason for each. |
+| *"It changed things I didn't ask for."* | Changes are kept **in memory, not on disk**. Forge **runs your tests on a private copy**, then shows every change as a separate piece (a "hunk") that you accept or reject. Applied changes can be **undone** with one click. |
+| *"It broke when the AI service failed."* | Forge **waits and retries** on short outages and **switches to a backup model automatically**, inside the same TrueForge session, so no work is lost. |
+
+It is built to work on **free AI models** (Google Gemini, Groq, OpenRouter free tiers), whose strict per-minute limits make every request count.
+
+## What makes it stand out
+
+1. **Graph-guided context.** Forge combines keyword ranking (BM25) with the [RepoMap](https://github.com/SylphxAI/repomap) code graph. The graph is centred on the symbol where both signals agree. Its callers, callees and tests go into the AI's context and are drawn as a small clickable diagram in the sidebar.
+2. **The agent checks its own work for free.** After every edit, Forge runs the relevant tests itself (in a sandbox) and tells the agent the result. No extra AI call is spent. Failures that existed before the change are ignored, so the agent never chases a problem it did not cause.
+3. **Quality gates.** If tests fail, or the request asked for tests or documentation that are missing, Forge refuses the first "I'm done" and explains what is missing.
+4. **A harness that protects against weak models.** Forge fixes small copy mistakes in edits, refuses duplicate insertions, sends incomplete edits back for correction, and tells the agent how many AI calls it has left.
+5. **TrueForge used to the full.** Tools are exposed over MCP; TrueForge's tool approval drives the diff review; tools load on demand; long conversations are compacted; and fallback changes the model of the live session. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## How it works
 
 ```text
-extension/   TypeScript VS Code extension starter and SDK dependency
-trueforge/   example agent configuration and local-runtime notes
-fixtures/    pristine Flask 3.1.3 checkout at commit 22d92470...
-scratch/     disposable dry-run copies and virtual environments
-scripts/     repeatable verification commands
-reports/     audit, baseline, issue, roadmap, and scorecard evidence
+ You (VS Code)                     Forge (the extension)                         TrueForge
+ ─────────────                     ─────────────────────                         ─────────
+ type a request  ───────────────▶  1. build a context pack      ──────────────▶  runs the agent loop
+                                      (BM25 + RepoMap graph)                      and calls the AI model
+                                   2. offer tools over MCP       ◀── tool calls ─  (Gemini / Groq / …)
+                                      search · read · stage edit · run tests
+                                   3. stage edits in memory,
+                                      auto-run tests in a sandbox
+ review each hunk ◀──────────────  4. "submit for review" needs TrueForge approval
+ accept / reject / undo            5. apply accepted hunks, save, keep an undo copy
 ```
 
-## Start immediately
+Forge never talks to an AI provider directly; every model call goes through TrueForge.
+
+## Results (live, free models, $0)
+
+| Task (from the brief) | Result |
+|---|---|
+| **A. Inline edit**: select `get_debug_flag`, type the instruction | Correct 2-hunk edit in **2 AI calls, 1.4 s** (Groq Qwen). Forge automatically rejected the model's first, incomplete answer and the model fixed it. |
+| **B. Agent mode**: add `flask config`, with no files named | **3 files** changed (code, test, docs); `pytest tests/test_cli.py` → **59 passed**; `config` appears in `flask --help`; secrets print as `***`; **Undo** restored everything. Survived four Gemini outages through an automatic mid-task model switch. 29 AI calls, 3.8 min. |
+| **C. Resilience**: unreachable model endpoint | With a backup model configured: retry, then automatic switch, then a correct edit in 3.9 s. Without one: a clear message. In both cases **no files changed**. |
+
+Automated checks: 19 offline unit tests and 7 tests in a real VS Code instance. Full evidence is in [reports/21-harness-v2.md](reports/21-harness-v2.md).
+
+## Try it
+
+You need Node.js 20+, Git, VS Code and at least one AI model (free tiers work). Python and [`uv`](https://docs.astral.sh/uv/) are only needed for the Flask example.
 
 ```bash
-cd /Users/dakshjain/Desktop/Hackathons/iit-true-forge
-./scripts/setup.sh
-npm --prefix extension test
-code extension
+# 1. Install and build the extension
+git clone https://github.com/dash10107/iit-true-forge.git && cd iit-true-forge
+npm ci --prefix extension && npm --prefix extension run compile
+
+# 2. Start TrueForge (leave this terminal open)
+OUTBOUND_URL_ALLOWED_HOSTS='["localhost","127.0.0.1"]' MODEL_HTTP_MAX_RETRIES=0 npx @truefoundry/trueforge@0.185.1
 ```
 
-In VS Code, choose **Run Extension** in Run and Debug and press F5. In the Extension Development Host, run `Forge: Environment Status` from the Command Palette.
+3. Open http://localhost:8790 → **Settings → Models** and add a model provider. Example settings: [trueforge/config/model-providers.example.json](trueforge/config/model-providers.example.json). API keys stay inside TrueForge, never in this repository.
+4. Open the `extension/` folder in VS Code and press **F5**. A second VS Code window opens with Forge loaded; open any project in it.
+5. Optional: copy the settings in [trueforge/config/forge-settings.example.json](trueforge/config/forge-settings.example.json) into your VS Code settings. Use `forge.fallbackModels` to set backup models and `forge.pythonPath` to set the Python used to run your tests.
 
-Start TrueForge separately when needed:
+Forge registers its agent definitions ([trueforge/agents/](trueforge/agents)) in TrueForge automatically on first use.
+
+### Using Forge
+
+- **Inline edit:** select code, press **⌘⌥K** (Ctrl+Alt+K on Windows/Linux), and type what you want. A diff opens; accept or reject each hunk in the Forge sidebar.
+- **Agent mode:** click the Forge icon in the activity bar, describe the change, and press ⌘↵. Watch the context card, the code graph and each tool call, then review the hunks. *Open in TrueForge ↗* shows the live session.
+- **Stop:** the Stop button, Esc in the sidebar, or ⌘⌥. (Ctrl+Alt+.). Nothing is written before review, so stopping is always safe.
+- **Undo:** the *Undo* button after applying, or **Forge: Undo Last Applied Change**.
+
+To reproduce the three competition tasks on Flask 3.1.3, follow [docs/DEMO.md](docs/DEMO.md).
+
+## Repository map
+
+| Path | What is in it |
+|---|---|
+| [extension/src/core](extension/src/core) | TrueForge client, session runner, model router (retry and fallback), line diff, budget profiles |
+| [extension/src/agent](extension/src/agent) | Workspace view, context pack (BM25 + RepoMap graph), staged edits, sandboxed `run_command`, MCP tools, agent run |
+| [extension/src/inline](extension/src/inline) | Inline edit (`propose_edit`, approval-gated) |
+| [extension/src/review](extension/src/review) | Per-hunk review, apply, undo |
+| [extension/src/ui](extension/src/ui), [extension/media](extension/media) | Sidebar (webview) |
+| [extension/scripts](extension/scripts) | Unit tests, headless live drivers, agent export |
+| [trueforge/](trueforge) | Agent definitions and example configuration |
+| [docs/](docs) | Architecture, demo guide, write-up draft |
+| [reports/](reports) | Engineering log, from the first audit to the latest results |
+
+## Development
 
 ```bash
-OUTBOUND_URL_ALLOWED_HOSTS='["localhost","127.0.0.1"]' npx @truefoundry/trueforge@latest
-# then open http://localhost:8790
+npm --prefix extension run test:unit     # offline: router, staging, diff, ranking, sandbox, sessions
+VSCODE_EXECUTABLE="/Applications/Visual Studio Code.app/Contents/MacOS/Code" npm --prefix extension test   # real editor
+node extension/scripts/agent-live.mjs <folder> "<request>" <model>[,<backup>...]   # live agent run, writes nothing
 ```
 
-The loopback allowlist is needed for TrueForge to connect to the extension's local MCP endpoint. Configure models in TrueForge before attempting a model-backed SDK turn. The extension never calls providers directly or stores provider secrets.
+## Declarations
 
-**Verified Task A result.** The approved agent patch passed the official Flask CLI suite (58 tests). The [research handoff](reports/06-task-a-vertical-slice.md) includes the turn history, tokens, tool calls and test evidence.
+- **Team:** Husttlers.
+  - Daksh Jain (SPIT) [@dash10107](https://github.com/dash10107)
+  - Vinay Vora (DJ Sanghvi, team leader) [@wizardsweb](https://github.com/wizardsweb)
+  - Vinisha Bhagwani (SPIT) [@vinisha1014](https://github.com/vinisha1014)
+  - Moksh Jain (DJ Sanghvi)
+  - Moksha Jain (KJ Somaiya) [@mdevworks](https://github.com/mdevworks)
+- **Starting point:** written from scratch; not a fork. The first commit (`d538d12`) is the team's own baseline.
+- **Third-party code:**
+  - One visually-hidden accessibility CSS rule adapted from [Cline](https://github.com/cline/cline) at `eff43e19b267e171f597ab03733bfed25090f72d` (Apache-2.0).
+  - [RepoMap](https://github.com/SylphxAI/repomap) `@sylphx/repomap@1.9.0` (MIT) used unmodified as a dependency.
+  - Licences and details are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [third_party/](third_party).
+- **Agent loop:** runs on TrueForge 0.185.1 in local mode, through `@truefoundry/trueforge-sdk@0.185.0`. The extension never calls a model provider directly.
+- **Models used** (all free tiers, configured in TrueForge, total cost **$0**):
+  - Google Gemini: `gemini-3-5-flash-lite`, `gemini-3-1-flash-lite`, `gemini-3-5-flash`, `gemma-4-31b-it`;
+  - Groq: `qwen-3-8-27b`;
+  - OpenRouter: `openrouter/free`.
+  - Any TrueForge model can be selected in the sidebar.
+- **AI coding assistants:** Claude Code (Anthropic) and OpenAI Codex were used while building Forge.
+- **Secrets:** no API keys are committed. [.env.example](.env.example) and the example configs contain placeholders only.
+- **Licence:** [MIT](LICENSE) for the team's code.
 
-For a fresh disposable Task A worktree, `npm --prefix extension run task-a:live` runs a proposal from the terminal. `npm --prefix extension run task-a:review` opens the review in VS Code. Both read `TRUEFORGE_MODEL`. The review launcher also reads `VSCODE_EXECUTABLE`.
+## Known limitations
 
-## Run the Task A vertical slice
-
-The local TrueForge UI must have at least one model configured under **Settings → Models**. Add provider credentials in that UI only; the extension never calls model providers directly. If several models are configured, **Forge: Task A** asks you to choose one and stores only its fully qualified model name in VS Code settings.
-
-Create a disposable worktree from the pristine fixture:
-
-```bash
-git -C /Users/dakshjain/Desktop/Hackathons/iit-true-forge/fixtures/flask-3.1.3 worktree add \
-  /Users/dakshjain/Desktop/Hackathons/iit-true-forge/scratch/flask-task-a-agent \
-  -b forge-task-a-agent
-```
-
-Open that worktree in a VS Code window. Open `src/flask/helpers.py`, select the complete `get_debug_flag` function, then run **Forge: Task A — Propose Selected Function Patch**. TrueForge reads through the local `read_file` and `search_repository` MCP tools. The extension streams the turn in the **Forge Task A** output channel and shows the proposed single hunk in VS Code's diff editor. Use **Approve and apply hunk** only after reviewing the diff; cancel and reject commands are also available. No source write occurs before approval.
-
-After approval, run:
-
-```bash
-/Users/dakshjain/Desktop/Hackathons/iit-true-forge/scripts/verify-task-a.sh
-```
-
-The script requires the disposable worktree to contain only the accepted change to `src/flask/helpers.py`, checks the official `FLASK_DEBUG=off` behavior plus case variants, confirms Flask imports from that worktree, and runs the CLI and helper test suites. The pristine fixture stays untouched.
-
-## Exact workflow commands
-
-Run long-lived commands in their own terminals:
-
-```bash
-# Open the extension project. In VS Code press F5, then run Forge: Environment Status.
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/extension
-
-# Start TrueForge and leave this terminal running.
-OUTBOUND_URL_ALLOWED_HOSTS='["localhost","127.0.0.1"]' npx @truefoundry/trueforge@latest
-
-# Open the pristine Flask benchmark in another VS Code window.
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/fixtures/flask-3.1.3
-
-# Re-run pinned Flask checks.
-/Users/dakshjain/Desktop/Hackathons/iit-true-forge/scripts/verify-flask-baseline.sh
-
-# Open the reports.
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/reports/00-environment-audit.md
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/reports/01-extension-starter-decision.md
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/reports/02-task-baseline.md
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/reports/03-issue-log.md
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/reports/04-implementation-roadmap.md
-code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/reports/05-verification-matrix.md
-```
-
-## Verification
-
-```bash
-./scripts/verify-environment.sh
-./scripts/verify-flask-baseline.sh
-./scripts/verify-trueforge.sh
-./scripts/verify-task-a.sh
-npm --prefix extension test
-```
-
-The Flask verification uses an isolated virtual environment and never edits the pristine fixture. Read the generated evidence and limitations in `reports/` before treating any result as competition readiness.
-
-The extension host test downloads stable VS Code on a clean machine. To use an already installed VS Code binary instead, set `VSCODE_EXECUTABLE` to its executable path before `npm --prefix extension test`.
-
-On this Mac, the verified command is:
-
-```bash
-VSCODE_EXECUTABLE="/Applications/Visual Studio Code.app/Contents/MacOS/Code" npm --prefix extension test
-```
-
-The extension's read-only MCP server listens only on `127.0.0.1` (default port 8791). TrueForge stores a named MCP connector and a workspace-specific Task A agent definition; the configured agent exposes only `read_file` and `search_repository`.
-
-
-## Task B live agent
-
-Task B runs from a clean linked Flask 3.1.3 worktree at the pinned commit. Set `FLASK_TASK_B_REPO` to that worktree, `TRUEFORGE_MODEL` to a model configured in local TrueForge, and `VSCODE_EXECUTABLE` to the installed VS Code binary. Run `npm --prefix extension run task-b:live` to open the editor and start the real TrueForge session. The launcher pauses at a reviewed digest and accepts an explicit approval for all or selected hunks, or a rejection. The extension command is **Forge: Task B — Discover, Verify and Review**. Read [Task B evidence](reports/07-task-b-vertical-slice.md) for current results.
-
-### Task B model fallback and context handoff
-
-Configure provider credentials privately under **TrueForge → Settings → Models**. For OpenRouter, add a custom OpenAI-compatible provider named `openrouter`, use base URL `https://openrouter.ai/api/v1`, and enter your OpenRouter key in that dialog. For a simple free fallback, add model ID `openrouter/free`; OpenRouter routes that ID to a free model that fits tool-calling requests. You can instead add a specific free model whose catalog page lists `tools` support. Free endpoints have rate limits, so a successful tool-calling test is still necessary. To see the exact TrueForge model names available to the extension, run:
-
-```bash
-npm --prefix /Users/dakshjain/Desktop/Hackathons/iit-true-forge/extension run trueforge:models
-```
-
-Choose a tool-calling primary model in `forge.trueforgeModel` and, optionally, up to two ordered tool-calling fallbacks in `forge.taskBFallbackModels`. The VS Code command can prompt for the primary model. For the terminal launcher, set `TRUEFORGE_MODEL` and optionally `TRUEFORGE_FALLBACK_MODELS` to the exact TrueForge names. These settings store model names only; TrueForge owns credentials and provider calls. Do not paste provider keys into VS Code settings, logs, or chat.
-
-Task B supports one primary and up to two ordered fallback models, all configured in TrueForge. It retries one transient 5xx/network failure with bounded backoff, reads Retry-After/reset headers, skips rate-limited or invalid-credential provider families, and reduces repository context after a context-length error. Malformed model output can move to a different configured model; tool/verification failures, cancellation, and any error after review begins stop without switching. OpenRouter model aliases share the same provider family and are skipped together after a 429. TrueForge creates a fresh session for each retry or switch. The extension checkpoints the original task, model/session IDs, staged hunks, validation history, failures, and file selection reasons to private extension storage after each MCP action. On the next run, you can choose to resume; it verifies the same clean pinned worktree and reruns validation before review. The terminal launcher keeps its private checkpoint alongside the run log.
-
-`forge.taskBContextBudget` bounds retrieved source excerpts. `forge.taskBDeferredTools` uses TrueForge deferred MCP loading and preloads investigation, source reading, run state, multi-file staging, verification and review tools. `forge.taskBEnableCompaction` is opt-in: one measured Qwen run emitted a 1,533-token compaction summary then hit its output-per-minute quota, so compaction stays off by default for that provider. `forge.taskBToolPaceMs` can slow tool responses for a provider's rolling token quota. Approved multi-file disk saves require one explicit Save All choice; if a later file save fails, earlier saves are rolled back and the complete proposal stays unsaved in editor buffers. If rollback encounters a conflicting file, a private recovery journal is preserved in extension storage. To explicitly restore only files still matching that journal, run `npm --prefix extension run task-b:recover -- /absolute/path/to/journal.json /absolute/path/to/worktree --rollback`. TrueForge's own tool loop remains the only agent loop. The optional [ECC reference](https://github.com/affaan-m/ecc) was cloned outside this project; its small Markdown handoff idea is reflected in [the working-state report](reports/08-working-state.md), without adding its separate runtime or memory service to Task B.
-
-Run the headless local checks with `npm --prefix extension run test:safety`. A live TrueForge agent has staged a three-file Task B proposal, but it failed isolated verification and did not reach review; see [the reliability report](reports/17-task-b-reliability.md). The default `forge.taskBIterationLimit` is 1,024, the maximum accepted by the installed TrueForge version; context, provider and verification limits remain. The terminal launcher accepts an explicit `FORGE_RESUME_CHECKPOINT` path and `TRUEFORGE_FALLBACK_MODELS=none` for a controlled single-model run.
-
-## Forge sidebar
-
-In the Extension Development Host, open a clean pinned Flask worktree and select the **Forge** icon in the Activity Bar. Pick a TrueForge model, enter a task or select **Use Task B request**, and press Send. The sidebar shows streamed messages and tool activity; the existing diff editor, hunk selection, validation and save approval remain in control of changes. The current verifier is specific to Flask Task B. See [the Cline UI integration report](reports/13-cline-ui-integration.md) for the UI's scope, tests, attribution and current limitations.
-
-## Symbol-level repository retrieval
-
-Forge can use the pinned local RepoMap 1.9.0 MCP process for symbol search, bounded context and inferred call/impact relationships. It indexes only a private mirror of tracked non-sensitive files, disables embedding downloads, and falls back to the existing repository search if unavailable. Enable or disable it with `forge.repoMapEnabled`. See [the RepoMap integration report](reports/14-repomap-integration.md) for limits and a reproducible Flask benchmark.
+- Free AI tiers often return "busy" (503) or "rate limit" (429) errors. Forge retries and switches models, but a run can still end at the call limit (`forge.maxModelCalls`). Staged changes are then still offered for review.
+- Weaker free models make many small tool calls, so agent runs take 20–35 AI calls.
+- The command sandbox uses macOS `sandbox-exec`. On Linux, commands run in a throwaway copy without OS-level isolation. Windows is untested.
+- The code outline is pattern-based (Python, JS/TS, Go, Rust, Markdown/RST). RepoMap's call graph is static analysis, so its edges are inferences.
