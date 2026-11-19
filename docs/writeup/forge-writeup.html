@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge — Write-up · Team Husttlers</title>
+<style>
+  @page { size: A4; margin: 0; }
+  :root {
+    --ink: #14171c; --muted: #5b6270; --faint: #8a909c; --rule: #e3e6ea; --panel: #f6f7f9;
+    --blue: #2f5bd3; --blue-soft: #e8eefc; --green: #138a5e; --green-soft: #e4f4ec;
+    --amber: #c77700; --amber-soft: #fdf1dd; --violet: #6b4fd0; --violet-soft: #efebfb; --red: #c23b3b;
+    --mono: "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font: 8.25pt/1.38 -apple-system, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; color: var(--ink); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; height: 297mm; padding: 11mm 12.5mm 10mm; position: relative; overflow: hidden; page-break-after: always; break-after: page; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .foot { position: absolute; left: 12.5mm; right: 12.5mm; bottom: 5.5mm; display: flex; justify-content: space-between; color: var(--faint); font-size: 7pt; }
+  h1 { font-size: 19pt; line-height: 1.1; margin: 0; letter-spacing: -.01em; }
+  h2 { font-size: 10.4pt; margin: 7px 0 3px; padding-bottom: 2px; border-bottom: 1.5px solid var(--ink); display: flex; align-items: baseline; gap: 6px; }
+  h2 .n { color: var(--blue); font-variant-numeric: tabular-nums; }
+  h3 { font-size: 8.8pt; margin: 6px 0 2px; }
+  p { margin: 0 0 4px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 7.6pt; }
+  code, .mono { font-family: var(--mono); font-size: .88em; }
+  code { background: var(--panel); padding: 0 2px; border-radius: 2px; }
+  a { color: var(--blue); text-decoration: none; }
+  table { width: 100%; border-collapse: collapse; font-size: 7.45pt; line-height: 1.3; }
+  th { text-align: left; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--ink); padding: 2px 5px 2px 0; white-space: nowrap; }
+  td { border-bottom: 1px solid var(--rule); padding: 2px 5px 2px 0; vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .card { border: 1px solid var(--rule); border-radius: 5px; padding: 5px 7px; background: #fff; }
+  .card.soft { background: var(--panel); border-color: var(--panel); }
+  .tag { display: inline-block; font-size: 6.6pt; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 0 4px; border-radius: 3px; }
+  .t-blue { color: var(--blue); background: var(--blue-soft); } .t-green { color: var(--green); background: var(--green-soft); }
+  .t-amber { color: var(--amber); background: var(--amber-soft); } .t-violet { color: var(--violet); background: var(--violet-soft); }
+  .stat b { display: block; font-size: 13pt; line-height: 1.1; letter-spacing: -.01em; }
+  .stat span { color: var(--muted); font-size: 7.3pt; }
+  .stat .k { font-size: 6.8pt; color: var(--faint); text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+  .lede { font-size: 9.4pt; line-height: 1.45; margin: 5px 0 7px; color: #2a2f37; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; }
+  .meta { text-align: right; font-size: 7.6pt; color: var(--muted); line-height: 1.45; white-space: nowrap; }
+  .prob .h { display: block; font-weight: 700; font-size: 8.4pt; margin-bottom: 1px; }
+  .prob .q { color: var(--muted); font-style: italic; font-size: 7.8pt; }
+  ol.steps { margin: 2px 0 4px; padding-left: 14px; }
+  ol.steps li { margin: 0 0 2px; }
+  ul.tight { margin: 1px 0 3px; padding-left: 13px; }
+  ul.tight li { margin: 0 0 1.5px; }
+  .fig { margin: 4px 0 2px; }
+  .fig svg { width: 100%; height: auto; display: block; }
+  .cap { font-size: 7.2pt; color: var(--muted); margin-top: 1px; }
+  .ts { width: 15mm; border: 1px dashed #b9bec7; border-radius: 3px; height: 10px; display: inline-block; vertical-align: middle; }
+  .ok { color: var(--green); font-weight: 700; } .warn { color: var(--amber); font-weight: 700; }
+  .team td:first-child { font-weight: 600; }
+  .pack td:nth-child(2) { white-space: nowrap; }
+  .num { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<!-- ============================== PAGE 1 ============================== -->
+<section class="page">
+  <div class="head">
+    <div>
+      <div class="tag t-blue">TrueFoundry Forge-a-thon · Techfest IIT Bombay · Round 1 write-up</div>
+      <h1 style="margin-top:4px">Forge — an editor-native coding agent on TrueForge</h1>
+    </div>
+    <div class="meta">Team <b>Husttlers</b><br><a href="https://github.com/dash10107/iit-true-forge">github.com/dash10107/<wbr>iit-true-forge</a><br>Video: <span class="ts" style="width:34mm"></span></div>
+  </div>
+  <p class="lede">Forge reads a repository larger than the model's context window, changes several files the user never named, <b>tests its own work</b>, and shows every hunk for review before anything touches disk — and keeps working when the model behind it fails. We built it to succeed on <b>free-tier models</b>, where per-minute token limits make every request count, so each design choice below trades complexity for fewer, smaller, safer requests.</p>
+
+  <div class="grid3">
+    <div class="card soft prob"><span class="h"><span class="tag t-blue">Context</span> Pick the right code before the model starts</span><span class="q">"It read the wrong files."</span><br>BM25 + the <b>RepoMap code graph</b> build a budgeted context pack; the sidebar shows every file, its reason and its token cost.</div>
+    <div class="card soft prob"><span class="h"><span class="tag t-green">Safety</span> Nothing reaches disk unreviewed</span><span class="q">"It changed things I didn't ask for."</span><br>Edits are staged in memory, <b>auto-verified in a sandbox</b>, reviewed hunk by hunk through TrueForge approval, and undoable.</div>
+    <div class="card soft prob"><span class="h"><span class="tag t-amber">Resilience</span> Survive the model failing</span><span class="q">"It broke when the API went down."</span><br>Wait out rate limits, back off on 5xx, then <b>switch models inside the same TrueForge session</b> — no lost work.</div>
+  </div>
+
+  <div class="grid4" style="margin-top:7px">
+    <div class="card stat"><div class="k">Task A · inline edit</div><b class="num">2 calls · 1.4 s</b><span>correct 2-hunk edit on Groq Qwen; a truncated first answer was auto-rejected and fixed in-turn</span></div>
+    <div class="card stat"><div class="k">Task B · agent mode</div><b class="num">3 files · 59 ✓</b><span>no files named; masked JSON; <code>config</code> in <code>--help</code>; Undo restored a clean tree</span></div>
+    <div class="card stat"><div class="k">Task C · resilience</div><b class="num">3.9 s · 0 files</b><span>unreachable endpoint → backoff retry → automatic fallback; workspace unchanged</span></div>
+    <div class="card stat"><div class="k">Cost · models</div><b class="num">$0</b><span>Gemini, Groq and OpenRouter free tiers via TrueForge; any TrueForge model works</span></div>
+  </div>
+
+  <h2><span class="n">1.</span> Team</h2>
+  <table class="team">
+    <tr><th>Member</th><th>College</th><th>GitHub</th><th>Member</th><th>College</th><th>GitHub</th></tr>
+    <tr><td>Vinay Vora <span class="tag t-amber">Lead</span></td><td>DJ Sanghvi College of Engineering</td><td class="mono">@wizardsweb</td><td>Moksh Jain</td><td>DJ Sanghvi College of Engineering</td><td class="mono">@Jain-Moksh</td></tr>
+    <tr><td>Daksh Jain</td><td>Sardar Patel Institute of Technology</td><td class="mono">@dash10107</td><td>Moksha Jain</td><td>K. J. Somaiya College of Engineering</td><td class="mono">@mdevworks</td></tr>
+    <tr><td>Vinisha Bhagwani</td><td>Sardar Patel Institute of Technology</td><td class="mono">@vinisha1014</td><td></td><td></td><td></td></tr>
+  </table>
+
+  <h2><span class="n">2.</span> Starting point</h2>
+  <p><b>From scratch — not a fork.</b> Our first commit (<code>d538d12</code>) is our own baseline. Reused: one visually-hidden accessibility CSS rule adapted from Cline (<code>eff43e19</code>, Apache-2.0) and <b>RepoMap</b> <code>@sylphx/repomap@1.9.0</code> (MIT) as an unmodified dependency. Licences in <code>THIRD_PARTY_NOTICES.md</code>; our code is MIT.</p>
+
+  <h2><span class="n">3.</span> Architecture on TrueForge</h2>
+  <div class="fig"><svg id="arch" viewBox="0 0 900 520" role="img" aria-label="Isometric architecture: VS Code, Forge extension host, TrueForge and models as stacked layers"></svg></div>
+  <div class="cap"><b>Figure 1.</b> Four layers. The extension is a <b>client</b> of a local TrueForge agent: it creates sessions and turns through the TypeScript SDK and renders the streamed events. Editor capabilities are <b>MCP tools</b>, so the agent — not the extension — decides what to read, change and run. Every model call is made by TrueForge.</div>
+
+  <div class="foot"><span>Forge · Team Husttlers · TrueForge 0.185.1 (local), SDK 0.185.0</span><span>1 / 3</span></div>
+</section>
+
+<!-- ============================== PAGE 2 ============================== -->
+<section class="page">
+  <div class="grid2">
+    <div>
+      <h3 style="margin-top:0">Editor capabilities exposed as MCP tools</h3>
+      <table>
+        <tr><th>Tool</th><th>What the agent can do</th></tr>
+        <tr><td class="mono">search_code</td><td>several literal queries per call, hits labelled with their enclosing symbol</td></tr>
+        <tr><td class="mono">read_code</td><td>several whole symbols or line ranges per call (≤ 200 lines each)</td></tr>
+        <tr><td class="mono">find_symbol</td><td>RepoMap definition, callers, callees and tests <span class="tag t-violet">deferred</span></td></tr>
+        <tr><td class="mono">list_files · view_staged · discard_staged</td><td>browse files, inspect or drop staged edits <span class="tag t-violet">deferred</span></td></tr>
+        <tr><td class="mono">stage_edits</td><td><b>propose writes</b> — held in memory, anchors repaired, tests <b>auto-run</b></td></tr>
+        <tr><td class="mono">run_command</td><td><b>run a command</b> — allowlisted, no shell, sandboxed snapshot with staged edits</td></tr>
+        <tr><td class="mono">submit_for_review · propose_edit</td><td><span class="tag t-green">approval</span> TrueForge's approval request opens the per-hunk review</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3 style="margin-top:0">TrueForge features we use — and where they are visible</h3>
+      <table>
+        <tr><th>Feature</th><th>How Forge uses it</th></tr>
+        <tr><td>Sessions · turns · streaming</td><td>every run is a session; text, reasoning and tool events stream to the sidebar; Stop = <code>sessions.cancel</code></td></tr>
+        <tr><td><code>requireApprovalForTools</code></td><td>the approval <b>is</b> the diff review: allow applies accepted hunks, deny returns a reason to the model</td></tr>
+        <tr><td>Deferred tool loading</td><td>5 tools preloaded, 4 load on demand via <code>list_tools</code> — <b>shown in the session and as timeline rows</b></td></tr>
+        <tr><td>Context compaction</td><td>per-model trigger (18k, or 5.2k on tight tiers) — <b>compaction events in session and sidebar</b></td></tr>
+        <tr><td>Large tool responses</td><td>enabled for both agents</td></tr>
+        <tr><td><code>sessions.update</code> + <code>previousTurnId</code></td><td><b>same-session fallback</b>: the failed model is swapped in the live session; all tool results survive</td></tr>
+        <tr><td>Usage breakdown</td><td>harness / instructions / tools / messages tokens per request drive the UI counters</td></tr>
+      </table>
+      <p class="small muted" style="margin-top:3px">Agent definitions <code>forge-agent</code> / <code>forge-inline</code> are in <code>trueforge/agents/</code>, exported by the code that builds the live specs.</p>
+    </div>
+  </div>
+
+  <h3>Design decisions and trade-offs</h3>
+  <table>
+    <tr><th style="width:24%">Decision</th><th style="width:30%">Alternative we rejected</th><th>Why — with what we measured</th></tr>
+    <tr><td><b>Context pack before the first call</b></td><td>let the agent navigate with search/read</td><td>v1 spent 40–85 model calls exploring; each call re-sends the history. With the pack, Task A needs 2 calls and Task B ~29.</td></tr>
+    <tr><td><b>Batched MCP tools</b></td><td>TrueForge Code Mode (local sandbox)</td><td>Code Mode raised per-request harness tokens from <b>213 to 1,978</b> — about 3× fewer requests per minute on Groq's 7k-TPM free tier. Kept opt-in (<code>forge.codeMode</code>).</td></tr>
+    <tr><td><b>Same-session fallback</b></td><td>restart a new session / checkpoint files</td><td>Keeps every tool result; replaced v1's checkpoint machinery. Needs inline-spec sessions: named-agent sessions return <i>422 agent cannot be updated</i>.</td></tr>
+    <tr><td><b>Harness runs the tests</b></td><td>rely on the model to call tests</td><td>Zero model calls, results diffed against an unmodified baseline so only new failures count. Caught a broken model test in Task B.</td></tr>
+    <tr><td><b>Stage in memory, write on approval</b></td><td>write to disk, revert on reject</td><td>Cancellation is trivially consistent; files are re-read at apply time and never overwritten if they changed during review.</td></tr>
+    <tr><td><b>Budget profiles per provider</b></td><td>one global budget</td><td>Groq rejects any single request above ~7k tokens; "tight" providers get a 2.2k pack and 1k output, others 7k.</td></tr>
+    <tr><td><b>Gates that fire once</b></td><td>hard requirements</td><td>Weak models submit early; each gate (failing tests, missing tests/docs, unverified) refuses one submit with a reason but never traps the agent.</td></tr>
+  </table>
+
+  <h2><span class="n">4.</span> How context is selected</h2>
+  <div class="grid2">
+    <div>
+      <ol class="steps">
+        <li><b>Terms &amp; role intent.</b> Identifier-aware terms; "test", "documented" select <i>file roles</i> instead of being searched.</li>
+        <li><b>BM25 over lines</b>, length-normalised, boosted for files that <i>define</i> a named identifier, filename matches and co-occurring terms; changelogs penalised.</li>
+        <li><b>RepoMap code graph.</b> Focus = the RepoMap symbol inside the best BM25 implementation file, so text and graph must agree; its callers, callees and tests join with reasons.</li>
+        <li><b>Role selection.</b> Best implementation, test and docs file; any further file needs <i>structural</i> evidence (graph neighbour, defines an identifier, named after the module, @-mentioned) — shared words are not enough.</li>
+        <li><b>Whole-symbol excerpts</b> ranked by term density, plus outlines with line ranges, packed under the budget; <code>@file</code>/<code>@symbol</code> always win.</li>
+      </ol>
+      <table>
+        <tr><th>Budget profile</th><th>Pack</th><th>Output</th><th>Compaction</th><th>Applies to</th></tr>
+        <tr><td>tight</td><td class="num">≈2.2k tok</td><td class="num">1k</td><td class="num">5.2k</td><td><code>forge.tightBudgetProviders</code> (Groq)</td></tr>
+        <tr><td>standard</td><td class="num">≈7k tok</td><td class="num">8k</td><td class="num">18k</td><td>all other models</td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="card" style="padding:5px 7px">
+        <div class="small"><b>Visible in Task B</b> — the sidebar's context card (and the first message of the TrueForge session) for the exact Task B request:</div>
+        <table class="pack" style="margin-top:2px">
+          <tr><th>File</th><th>Role</th><th>Why it was chosen</th></tr>
+          <tr><td class="mono">src/flask/cli.py</td><td><span class="tag t-amber">impl</span></td><td>filename matches <i>cli</i>; RepoMap symbol <code>FlaskGroup</code> (rank 1)</td></tr>
+          <tr><td class="mono">tests/test_cli.py</td><td><span class="tag t-green">test</span></td><td>calls <code>FlaskGroup</code> (static graph); RepoMap test for it</td></tr>
+          <tr><td class="mono">docs/cli.rst</td><td><span class="tag t-violet">docs</span></td><td>named after <code>src/flask/cli.py</code>; mentions <i>built-in, commands</i></td></tr>
+          <tr><td class="mono">tests/test_testing.py</td><td><span class="tag t-green">test</span></td><td>RepoMap test for <code>FlaskGroup</code></td></tr>
+        </table>
+        <div class="fig" style="margin-top:3px"><svg id="graph" viewBox="0 0 400 112" role="img" aria-label="Code graph around FlaskGroup"></svg></div>
+        <div class="cap"><b>Figure 2.</b> The code-graph view drawn in the sidebar: callers → <b>focus</b> → calls / tests (dashed). Pack: <b>5.0k of 7.0k tokens</b>, 4 files, 340 ms, no model calls. <code>TestRoutes.invoke</code> is an existing CLI-command test — the pattern to imitate.</div>
+      </div>
+    </div>
+  </div>
+  <p class="small" style="margin-top:3px">After the pack, the agent fetches only what is missing in <b>batched</b> calls; every tool result states the remaining call budget ("28/40 model calls used… stage now"), and TrueForge compaction keeps long runs within the window.</p>
+
+  <div class="foot"><span>Forge · Team Husttlers</span><span>2 / 3</span></div>
+</section>
+
+<!-- ============================== PAGE 3 ============================== -->
+<section class="page">
+  <h2 style="margin-top:0"><span class="n">5.</span> Model setup</h2>
+  <div class="grid2">
+    <table>
+      <tr><th>Provider (configured in TrueForge)</th><th>Models used</th></tr>
+      <tr><td>Google Gemini · native provider</td><td class="mono">gemini-3-5-flash-lite · gemini-3-1-flash-lite · gemini-3-5-flash · gemma-4-31b-it</td></tr>
+      <tr><td>Groq · OpenAI-compatible</td><td class="mono">qwen-3-8-27b</td></tr>
+      <tr><td>OpenRouter · OpenAI-compatible</td><td class="mono">openrouter/free</td></tr>
+      <tr><td>Test-only, Task C</td><td><span class="mono">forge-demo-broken/unreachable</span> — 127.0.0.1, nothing listening</td></tr>
+      <tr><td colspan="2"><b>Where:</b> provider APIs, called only by the local TrueForge server. <b>Cost: $0</b> — every model is a free tier.</td></tr>
+    </table>
+    <div>
+      <p><b>Switching models:</b> pick any TrueForge model in the sidebar; list automatic fallbacks in <code>forge.fallbackModels</code>. Nothing is provider-specific except an optional "tight budget" list. Keys live only in TrueForge; the repository ships <code>model-providers.example.json</code> with placeholders.</p>
+      <p><b>Router policy:</b> 429 with Retry-After ≤ 65 s → wait; 5xx / network → exponential backoff (2 s, 4 s); malformed tool call → one retry; bad credentials / quota / unavailable / too large → switch. Credentials block the provider; quotas only the model.</p>
+    </div>
+  </div>
+
+  <h3>Task B, live through the extension — what the harness did</h3>
+  <div class="fig"><svg id="timeline" viewBox="0 0 900 132" role="img" aria-label="Timeline of the successful Task B run"></svg></div>
+  <div class="cap"><b>Figure 3.</b> <span style="color:#c77700">○</span> retry · <span style="color:#2f5bd3">◆</span> model switch · <span style="color:#6b4fd0">●</span> edit staged / <span style="color:#6b4fd0">○</span> anchor rejected · <span style="color:#138a5e">●</span>/<span style="color:#c23b3b">●</span> auto-verify pass/fail · ■ review. Session <code>01m7tbsk97s2q2nhe2k0ydakrg</code> (event log <code>reports/evidence/task-b-v2-run.jsonl</code>). Gemini returned 503 four times; the router retried, then switched models <b>inside the same session</b>. Auto-verify flagged the model's failing test; the model repaired it (59 passed) and documented the command. 29 model calls, 23 tool calls, 3.8 min. Official checks then passed and Undo restored a clean <code>git status</code>.</div>
+
+  <h2><span class="n">6.</span> Scorecard</h2>
+  <table>
+    <tr><th style="width:15%">Criterion</th><th style="width:12%">Video</th><th style="width:42%">Claim</th><th>Evidence</th></tr>
+    <tr><td><b>A1</b> Inline edit</td><td><span class="ts"></span></td><td>Select → ⌘⌥K → typed instruction → diff in the editor; accept/reject <b>per hunk</b></td><td>Task A, 2 hunks; <code>FLASK_DEBUG=off</code> → <code>False</code></td></tr>
+    <tr><td><b>A2</b> Agent mode</td><td><span class="ts"></span></td><td>One request, no files named; agent discovers and edits 3 files</td><td><code>cli.py</code>, <code>test_cli.py</code>, <code>cli.rst</code>; 59 passed</td></tr>
+    <tr><td><b>A3</b> Streaming &amp; cancel</td><td><span class="ts"></span></td><td>Tokens, reasoning and tool rows stream live; Stop cancels the session; tree stays clean</td><td>edits only in memory until approval</td></tr>
+    <tr><td><b>B1</b> Context assembly</td><td><span class="ts"></span></td><td>Budgeted pack (BM25 + RepoMap graph); files, reasons and tokens shown in Task B</td><td>context card + Figure 2</td></tr>
+    <tr><td><b>B2</b> Diff safety</td><td><span class="ts"></span></td><td>Nothing written before review; per-hunk accept; <b>Undo</b> of an applied change</td><td>Undo → <code>git status</code> empty</td></tr>
+    <tr><td><b>B3</b> Resilience</td><td><span class="ts"></span></td><td>Unreachable endpoint → backoff retry → <b>automatic fallback</b> to the second model, no user action</td><td>3.9 s; 0 files changed</td></tr>
+    <tr><td><b>B4</b> TrueForge depth</td><td><span class="ts"></span></td><td>MCP tools; approval drives review; <b>deferred tool loading + compaction</b> visible; same-session fallback</td><td>TrueForge session view</td></tr>
+    <tr><td><b>C1</b> Video</td><td><span class="ts"></span></td><td>Tasks A, B, C in order, each verified on screen; Task B session shown</td><td>≤ 4 min</td></tr>
+    <tr><td><b>C2</b> Write-up</td><td>—</td><td>Architecture, context strategy and budget, model setup, trade-offs, scorecard, limitations</td><td>this document</td></tr>
+  </table>
+
+  <div class="grid2">
+    <div>
+      <h2><span class="n">7.</span> Tools used</h2>
+      <ul class="tight">
+        <li><b>AI coding assistants:</b> Claude Code (Anthropic) and OpenAI Codex.</li>
+        <li><b>Harness &amp; SDKs:</b> TrueForge 0.185.1 (local), <code>@truefoundry/trueforge-sdk</code>, MCP TypeScript SDK, RepoMap 1.9.0.</li>
+        <li><b>Editor &amp; tests:</b> VS Code Extension API, <code>@vscode/test-electron</code> (7 real-editor tests), Node test runner (20 offline tests incl. a fake TrueForge), pytest, <code>uv</code>, macOS <code>sandbox-exec</code>.</li>
+      </ul>
+    </div>
+    <div>
+      <h2><span class="n">8.</span> Known limitations — and another month</h2>
+      <ul class="tight">
+        <li><b>Free tiers are the ceiling.</b> Of five live Task B runs through the extension, <b>two passed every check</b>; one produced a wrong change (which led to the duplicate guard and gates); <b>two stopped</b> when Gemini (503) and Groq (per-minute limits) were exhausted at once — Forge offered the partial staged work for review instead of losing it, flagged as incomplete.</li>
+        <li>Weak free models make many single calls: Task B takes 20–40 calls despite batching guidance.</li>
+        <li>Sandbox is macOS <code>sandbox-exec</code>; Linux has a throwaway copy without OS isolation; Windows untested.</li>
+        <li>Outline is pattern-based; RepoMap edges are static inferences. Hunk decisions live in the sidebar, not inside the diff editor. Sidebar history is per window.</li>
+      </ul>
+      <p class="small"><b>With another month:</b> persistent RepoMap/BM25 indexes for very large repos; plan-then-fetch prefetching; in-editor hunk controls; bubblewrap sandbox on Linux; an evaluation suite to tune ranking by measured success; upstream TrueForge PRs for built-in model fallback, agent switching on named sessions, and the <code>reasoning_content</code> echo that breaks <code>gpt-oss-20b</code> on Groq.</p>
+    </div>
+  </div>
+
+  <div class="foot"><span>Forge · Team Husttlers · MIT licence · full engineering log in <code>reports/</code></span><span>3 / 3</span></div>
+</section>
+
+<script>
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs = {}, text) => { const n = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (text !== undefined) n.textContent = text; return n; };
+
+/* ---------- Figure 1: isometric architecture stack (raised blocks, labels on front faces) ---------- */
+(function arch() {
+  const svg = document.getElementById("arch");
+  const KX = 0.55, KY = 0.30, W = 640, D = 104, T = 8, BH = 34, BY = 22, BD = 58, GAP = 128;
+  const OX = 150, OY = 3 * GAP + BH + D * KY + 14;   // top of the highest block sits just inside the viewBox
+  const P = (x, y, z) => [OX + x + y * KX, OY - y * KY - z];
+  const pts = a => a.map(p => p.map(v => v.toFixed(1)).join(",")).join(" ");
+  const defs = el("defs");
+  defs.innerHTML = '<marker id="ah" viewBox="0 0 8 8" refX="6.5" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto-start-reverse"><path d="M0,0 L8,4 L0,8 z" fill="#3b4150"/></marker>';
+  svg.append(defs);
+  const layers = [
+    { name: "Models", sub: "configured in TrueForge", top: "#eef0f3", side: "#d5d9e0", face: "#ffffff", ink: "#3b4150",
+      tiles: [["Gemini", "free tier"], ["Groq", "free tier"], ["OpenRouter", "free tier"], ["Any OpenAI-compatible", "or local model"]] },
+    { name: "TrueForge", sub: "local harness · agent loop", top: "#e3eafb", side: "#bccbf2", face: "#ffffff", ink: "#2f5bd3",
+      tiles: [["Agent loop", "sessions · turns"], ["MCP client", "remote servers"], ["Tool approval", "requireApproval"], ["Deferred tools", "list_tools"], ["Compaction", "per-model trigger"]] },
+    { name: "Forge host", sub: "VS Code extension process", top: "#dff1e8", side: "#b5dfc9", face: "#ffffff", ink: "#138a5e",
+      tiles: [["Context pack", "BM25 + RepoMap"], ["Model router", "retry · fallback"], ["Session runner", "events · approvals"], ["MCP tools", "9 editor tools"], ["Stage + sandbox", "auto-verify"]] },
+    { name: "VS Code", sub: "what the user sees", top: "#ece7fa", side: "#d2c7f1", face: "#ffffff", ink: "#6b4fd0",
+      tiles: [["Sidebar", "chat · tool timeline"], ["Context card", "files · code graph"], ["Per-hunk review", "accept · undo"], ["Inline edit", "⌘⌥K · diff"]] },
+  ];
+  const tileBoxes = [];
+  function slab(L, i) {
+    const z = i * GAP, g = el("g");
+    g.append(el("polygon", { points: pts([P(0, 0, z), P(W, 0, z), P(W, 0, z - T), P(0, 0, z - T)]), fill: L.side }));
+    g.append(el("polygon", { points: pts([P(W, 0, z), P(W, D, z), P(W, D, z - T), P(W, 0, z - T)]), fill: L.side, opacity: .75 }));
+    g.append(el("polygon", { points: pts([P(0, 0, z), P(W, 0, z), P(W, D, z), P(0, D, z)]), fill: L.top }));
+    const n = L.tiles.length, gap = 16, bw = (W - gap * (n + 1)) / n;
+    tileBoxes[i] = [];
+    L.tiles.forEach(([title, sub], k) => {
+      const x = gap + k * (bw + gap);
+      tileBoxes[i].push(x + bw / 2);
+      g.append(el("polygon", { points: pts([P(x + bw, BY, z), P(x + bw, BY + BD, z), P(x + bw, BY + BD, z + BH), P(x + bw, BY, z + BH)]), fill: L.side }));
+      g.append(el("polygon", { points: pts([P(x, BY, z + BH), P(x + bw, BY, z + BH), P(x + bw, BY + BD, z + BH), P(x, BY + BD, z + BH)]), fill: L.top, stroke: L.side }));
+      const [fx, fy] = P(x, BY, z + BH);
+      g.append(el("rect", { x: fx, y: fy, width: bw, height: BH, fill: L.face, stroke: L.ink, "stroke-opacity": .45, "stroke-width": 1 }));
+      g.append(el("text", { x: fx + bw / 2, y: fy + 14.5, "text-anchor": "middle", "font-size": title.length > 16 ? 10.6 : 12, "font-weight": 700, fill: L.ink }, title));
+      g.append(el("text", { x: fx + bw / 2, y: fy + 27, "text-anchor": "middle", "font-size": 9.4, fill: "#5b6270" }, sub));
+    });
+    const [lx, ly] = P(-12, 0, z);
+    g.append(el("text", { x: lx, y: ly - 12, "text-anchor": "end", "font-size": 14, "font-weight": 800, fill: L.ink }, L.name));
+    g.append(el("text", { x: lx, y: ly + 1, "text-anchor": "end", "font-size": 9.4, fill: "#5b6270" }, L.sub));
+    svg.append(g);
+  }
+  // A connector rises from the top of a block in layer i to the underside of layer i+1, through the gap only.
+  function link(i, k, label, dir = "up", side = "right") {
+    const x = tileBoxes[i][k], y = BY + BD / 2, z1 = i * GAP + BH, z2 = (i + 1) * GAP - T;
+    const [ax, ay] = P(x, y, z1), [bx, by] = P(x, y, z2);
+    const [sx, sy, ex, ey] = dir === "up" ? [ax, ay, bx, by] : [bx, by, ax, ay];
+    svg.append(el("line", { x1: sx, y1: sy, x2: ex, y2: ey, stroke: "#3b4150", "stroke-width": 1.25, "marker-end": "url(#ah)" }));
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    const t = el("text", { x: side === "right" ? mx + 7 : mx - 7, y: my + 3.3, "text-anchor": side === "right" ? "start" : "end", "font-size": 9.6, "font-weight": 600, fill: "#3b4150" }, label);
+    svg.append(t);
+    const bb = t.getBBox();
+    const pill = el("rect", { x: bb.x - 4, y: bb.y - 2, width: bb.width + 8, height: bb.height + 4, rx: 7, fill: "#ffffff", stroke: "#e3e6ea" });
+    svg.insertBefore(pill, t);
+  }
+  layers.forEach((L, i) => slab(L, i));
+  link(0, 0, "every model call", "down");
+  link(1, 0, "SDK: sessions · turns · events", "down", "left");
+  link(1, 3, "sessions.update → same-session fallback", "down", "right");
+  link(1, 1, "MCP tool calls · approval requests", "up", "right");
+  link(2, 2, "streamed UI events", "up", "right");
+  link(2, 4, "hunk decisions", "down", "left");
+  // Tighten the viewBox to the drawing.
+  const bb = svg.getBBox();
+  svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(0)} ${(bb.y - 4).toFixed(0)} ${(bb.width + 8).toFixed(0)} ${(bb.height + 8).toFixed(0)}`);
+})();
+
+/* ---------- Figure 2: code graph around FlaskGroup ---------- */
+(function graph() {
+  const svg = document.getElementById("graph");
+  const nodeW = 104, nodeH = 18, W = 400, H = 112;
+  const callers = ["test_app_cli_has_app_context", "test_flaskgroup_nested", "test_help_echo_exception", "TestRoutes.invoke"];
+  const right = [["AppGroup", "calls"], ["tests/test_cli.py", "test"], ["tests/test_testing.py", "test"]];
+  const y = (i, n) => 8 + (H - 16) * (i + 0.5) / n;
+  const fx = (W - nodeW) / 2, fy = H / 2;
+  const box = (x, cy, label, kind) => {
+    const stroke = kind === "focus" ? "#2f5bd3" : kind === "test" ? "#138a5e" : "#a7adb8";
+    const fill = kind === "focus" ? "#e8eefc" : "#ffffff";
+    svg.append(el("rect", { x, y: cy - nodeH / 2, width: nodeW, height: nodeH, rx: 4, fill, stroke, "stroke-width": kind === "focus" ? 1.6 : 1 }));
+    const t = label.length > 19 ? label.slice(0, 18) + "…" : label;
+    svg.append(el("text", { x: x + nodeW / 2, y: cy + 3.5, "text-anchor": "middle", "font-size": 8.6, "font-family": "SF Mono, Menlo, monospace", fill: "#14171c", "font-weight": kind === "focus" ? 700 : 400 }, t));
+  };
+  callers.forEach((c, i) => svg.append(el("line", { x1: 6 + nodeW, y1: y(i, callers.length), x2: fx, y2: fy, stroke: "#a7adb8" })));
+  right.forEach(([n, k], i) => svg.append(el("line", { x1: fx + nodeW, y1: fy, x2: W - 6 - nodeW, y2: y(i, right.length), stroke: k === "test" ? "#138a5e" : "#a7adb8", "stroke-dasharray": k === "test" ? "3 3" : "none" })));
+  callers.forEach((c, i) => box(6, y(i, callers.length), c, "caller"));
+  right.forEach(([n, k], i) => box(W - 6 - nodeW, y(i, right.length), n, k));
+  box(fx, fy, "FlaskGroup", "focus");
+  svg.append(el("text", { x: 6, y: H - 1, "font-size": 7.6, fill: "#8a909c" }, "called from"));
+  svg.append(el("text", { x: W - 6, y: H - 1, "font-size": 7.6, fill: "#8a909c", "text-anchor": "end" }, "calls · tests"));
+})();
+
+/* ---------- Figure 3: Task B run timeline (real event times, seconds) ---------- */
+(function timeline() {
+  const svg = document.getElementById("timeline");
+  const E = [[0,"context"],[20.9,"read"],[30.6,"read"],[39.6,"read"],[49.7,"read"],[59.7,"retry"],[71.8,"read"],[82,"read"],[99.3,"read"],[109,"read"],[119,"read"],[128.5,"read"],[138.5,"run"],[148,"verify"],[148,"stage"],[161.4,"retry"],[174,"read"],[193.2,"switch"],[194,"retry"],[197.1,"retry"],[205.7,"verify-fail"],[205.7,"stage"],[209.2,"stage-fail"],[211.6,"stage-fail"],[212.9,"read"],[214.9,"read"],[218.1,"stage-fail"],[221.5,"verify"],[221.5,"stage"],[223.4,"read"],[227,"verify"],[227,"stage"],[230,"submit"]];
+  const X0 = 92, X1 = 718, T = 232, X = t => X0 + (X1 - X0) * t / T;
+  const lanes = { model: 30, tools: 62, edits: 90, verify: 116 };
+  const laneName = { model: "Provider", tools: "Search / read", edits: "Edits", verify: "Verify" };
+  for (const [k, yv] of Object.entries(lanes)) {
+    svg.append(el("line", { x1: X0, x2: X1, y1: yv, y2: yv, stroke: "#e3e6ea" }));
+    svg.append(el("text", { x: X0 - 8, y: yv + 3.5, "text-anchor": "end", "font-size": 10, fill: "#5b6270", "font-weight": 600 }, laneName[k]));
+  }
+  for (let s = 0; s <= 225; s += 25) {
+    svg.append(el("text", { x: X(s), y: 10, "text-anchor": "middle", "font-size": 8.5, fill: "#8a909c" }, s + " s"));
+  }
+  // Model segments: Gemini 3.5 Flash Lite until the switch, then 3.1 Flash Lite.
+  svg.append(el("rect", { x: X(0), y: lanes.model - 6, width: X(193.2) - X(0), height: 12, rx: 3, fill: "#e4f4ec" }));
+  svg.append(el("rect", { x: X(193.2), y: lanes.model - 6, width: X(230) - X(193.2), height: 12, rx: 3, fill: "#e8eefc" }));
+  svg.append(el("text", { x: X(4), y: lanes.model + 3.5, "font-size": 9, fill: "#138a5e", "font-weight": 600 }, "gemini-3-5-flash-lite"));
+  const dot = (t, lane, color, r = 4.2, ring = false) => svg.append(el("circle", { cx: X(t), cy: lanes[lane], r, fill: ring ? "#fff" : color, stroke: color, "stroke-width": ring ? 2 : 0 }));
+  for (const [t, k] of E) {
+    if (k === "retry") dot(t, "model", "#c77700", 4.6, true);
+    else if (k === "switch") svg.append(el("path", { d: `M${X(t) - 6},${lanes.model} l6,-7 l6,7 l-6,7 z`, fill: "#2f5bd3" }));
+    else if (k === "read" || k === "context" || k === "run") dot(t, "tools", k === "context" ? "#6b4fd0" : "#8a909c", k === "context" ? 5 : 3.4);
+    else if (k === "stage") dot(t, "edits", "#6b4fd0", 4.2);
+    else if (k === "stage-fail") dot(t, "edits", "#6b4fd0", 4, true);
+    else if (k === "verify") dot(t, "verify", "#138a5e", 4.6);
+    else if (k === "verify-fail") dot(t, "verify", "#c23b3b", 4.6);
+    else if (k === "submit") { svg.append(el("rect", { x: X(t) - 5, y: lanes.edits - 8, width: 10, height: 16, rx: 2, fill: "#14171c" })); }
+  }
+  const note = (t, lane, dy, text, color = "#3b4150", anchor = "middle") => svg.append(el("text", { x: X(t), y: lanes[lane] + dy, "text-anchor": anchor, "font-size": 8.8, fill: color, "font-weight": 600 }, text));
+  note(0, "tools", -9, "context pack", "#6b4fd0", "start");
+  note(110, "model", -10, "503 ×4 → retries with backoff", "#c77700");
+  note(193.2, "model", -10, "switch", "#2f5bd3");
+  note(148, "verify", 13, "✓ 58 baseline", "#138a5e");
+  note(205.7, "verify", 13, "✗ new test fails", "#c23b3b", "end");
+  note(214, "edits", -9, "anchor retries", "#6b4fd0");
+  // Outcomes in a right-hand margin so the dense final seconds stay readable.
+  const out = (lane, text, color) => svg.append(el("text", { x: X1 + 14, y: lanes[lane] + 3.5, "font-size": 9.4, fill: color, "font-weight": 700 }, text));
+  svg.append(el("line", { x1: X1 + 8, x2: X1 + 8, y1: 18, y2: 124, stroke: "#e3e6ea" }));
+  out("model", "→ 3-1-flash-lite, same session", "#2f5bd3");
+  out("tools", "23 tool calls · 29 model calls", "#5b6270");
+  out("edits", "■ review: 4 hunks in 3 files", "#14171c");
+  out("verify", "✓ 59 passed after repair", "#138a5e");
+})();
+</script>
+</body>
+</html>
