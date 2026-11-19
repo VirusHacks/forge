@@ -24,8 +24,8 @@ TrueForge features used:
 | Sessions, turns, streamed events | every run | streaming text, reasoning, tool calls; cancellation via `sessions.cancel` |
 | Remote MCP server | editor tools | the agent decides what to search, read, stage and run |
 | `requireApprovalForTools` | `submit_for_review`, `propose_edit` | TrueForge's approval request drives the per-hunk diff review |
-| Deferred tool loading (`preloadTools`) | agent mode | 5 core tools preloaded; `find_symbol`, `list_files`, `view_staged`, `discard_staged` load on demand |
-| Context compaction | agent mode | triggered per model profile (5.2k tokens on tight free tiers, 40k otherwise) |
+| Deferred tool loading (`preloadTools`) | agent mode | 5 core tools preloaded; `find_symbol`, `list_files`, `view_staged`, `discard_staged` load on demand via `list_tools`, shown in the sidebar timeline |
+| Context compaction | agent mode | triggered per model profile (5.2k tokens on tight free tiers, 18k otherwise); visible as compaction events in the session and the sidebar |
 | Large tool response handling | both agents | oversized tool output is handled by the harness instead of flooding context |
 | `sessions.update` + `previousTurnId` | fallback | switch models inside the same session without losing tool results |
 

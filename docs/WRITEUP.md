@@ -11,7 +11,7 @@
 | Vinay Vora (leader) | DJ Sanghvi College of Engineering | [@wizardsweb](https://github.com/wizardsweb) |
 | Daksh Jain | Sardar Patel Institute of Technology (SPIT) | [@dash10107](https://github.com/dash10107) |
 | Vinisha Bhagwani | Sardar Patel Institute of Technology (SPIT) | [@vinisha1014](https://github.com/vinisha1014) |
-| Moksh Jain | DJ Sanghvi College of Engineering | |
+| Moksh Jain | DJ Sanghvi College of Engineering | [@Jain-Moksh](https://github.com/Jain-Moksh) |
 | Moksha Jain | K. J. Somaiya College of Engineering | [@mdevworks](https://github.com/mdevworks) |
 
 ## 2. Starting point
@@ -46,8 +46,8 @@ The VS Code extension is a client of TrueForge 0.185.1 (local mode) through `@tr
 | Feature | Why |
 |---|---|
 | `requireApprovalForTools` | TrueForge's approval request drives the per-hunk diff review, so nothing reaches disk unapproved |
-| Deferred tool loading | 5 tools preloaded, 4 on demand, to keep prompts small for free tiers |
-| Context compaction | triggered per model profile |
+| Deferred tool loading | 5 tools preloaded, 4 loaded on demand through TrueForge's `list_tools`, to keep prompts small for free tiers; the `list_tools` calls show in the session and the sidebar timeline |
+| Context compaction | triggered per model profile (18k tokens, or 5.2k on tight free tiers); visible as compaction events in the session and the sidebar |
 | Large-tool-response handling | keeps oversized tool output out of the conversation |
 | `sessions.update` + `previousTurnId` | **same-session model fallback**: a failed model is replaced in the live session and every tool result is kept |
 

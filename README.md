@@ -109,7 +109,7 @@ node extension/scripts/agent-live.mjs <folder> "<request>" <model>[,<backup>...]
   - Daksh Jain (SPIT) [@dash10107](https://github.com/dash10107)
   - Vinay Vora (DJ Sanghvi, team leader) [@wizardsweb](https://github.com/wizardsweb)
   - Vinisha Bhagwani (SPIT) [@vinisha1014](https://github.com/vinisha1014)
-  - Moksh Jain (DJ Sanghvi)
+  - Moksh Jain (DJ Sanghvi) [@Jain-Moksh](https://github.com/Jain-Moksh)
   - Moksha Jain (KJ Somaiya) [@mdevworks](https://github.com/mdevworks)
 - **Starting point:** written from scratch; not a fork. The first commit (`d538d12`) is the team's own baseline.
 - **Third-party code:**

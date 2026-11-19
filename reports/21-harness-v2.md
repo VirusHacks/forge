@@ -94,6 +94,24 @@ Compared with v1's one success (85 responses, 1.22M input tokens, a checkpoint r
 
 Suites after these changes: **19 offline unit tests** and **7 extension-host tests** passed.
 
+## Addendum 2: making context engineering visible, and the free-tier ceiling (20 November 2026)
+
+A self-assessment against the B4 anchor ("visible in the session") showed that the successful Task B session (`01m7tbsk97s2q2nhe2k0ydakrg`) contained only one `list_tools` call. It had **no compaction**: its largest request was 24.9k tokens against a 40k trigger. We changed four things:
+
+- **Standard-profile compaction now triggers at 18k input tokens.** TrueForge now compacts during Task B, and the sidebar shows "TrueForge compacted earlier context".
+- **TrueForge's own harness tool calls appear in the timeline.** These are calls with `toolInfo.type = "truefoundry-system"`, shown as rows such as *TrueForge list_tools · deferred tool loading*.
+- **The context pack is tighter.** Beyond the best implementation, test and docs file, a file must have *structural* evidence: it defines a requested identifier, belongs to the RepoMap neighbourhood, is named after the module, or was mentioned. The Task B pack went from 6 files / 7.0k tokens (three of them weak) to `docs/cli.rst`, `tests/test_cli.py`, `src/flask/cli.py` and the graph-linked `tests/test_testing.py`, in 5.0k tokens.
+- **The router and profiles were corrected:**
+  - "Request too large" is classified as a size failure even when Groq sends it as a 429, because waiting cannot fix it.
+  - The tight-profile output cap is 1,000 tokens, Groq Qwen's per-minute output limit.
+  - A run that stops early now tells the reviewer which requested tests or docs are missing.
+
+Two confirmation runs through the extension (sessions `01m7td45pfk45rmwwmxjn05qgg` and `01m7tdk1bk9r1bf9esdj20mqbz`) **confirmed the visibility changes**. Each showed 2–6 compaction events and 2–3 `list_tools` calls in both the TrueForge session and the sidebar.
+
+Neither run completed the task. In both, Gemini 3.5 Flash Lite and Gemini 3.1 Flash Lite returned 503 repeatedly. The router retried with backoff and switched twice in the same session, and Groq then exhausted its 7k input-tokens-per-minute (or 1k output) limits. The runs stopped after 35–41 model calls with only `src/flask/cli.py` staged: its command worked (`config` listed in `--help`, secrets masked, 58 tests passing), but there was no test and no docs. The scripted reviewer accepted the second run's partial proposal because its tests passed; Forge's Undo restored the file and `git status` was clean.
+
+This is the free-tier ceiling: with all three providers degraded at once, no harness can finish. The successful run 3 above remains the evidence for Task B. **For recording, use fresh keys or a model with headroom, and probe availability first.**
+
 ## Not yet done
 
 - A Task B run in which a human clicks Accept in the sidebar. The automated runs above used a scripted approval.

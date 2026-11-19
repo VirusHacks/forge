@@ -39,7 +39,7 @@ Before the first model call, Forge builds a **context pack** under a token budge
 2. **BM25 over lines.** Scores are length-normalised, so large files do not win by size. Files that *define* an identifier named in the request get a strong boost. Filename matches count. Lines where several terms co-occur (registration sites) add weight. Changelogs are penalised.
 3. **RepoMap code graph.** [RepoMap](https://github.com/SylphxAI/repomap) indexes a private mirror of the workspace. Forge takes the RepoMap symbol hits and then **anchors the graph focus to the hit inside the best lexically ranked implementation file**, so text ranking and graph ranking must agree. The focus's **callers, callees and tests** are pulled in as candidates with reasons ("calls FlaskGroup (static graph)", "RepoMap test for FlaskGroup").
 4. **Module affinity.** Tests and docs named after the top implementation file are boosted (`cli.py` → `tests/test_cli.py`, `docs/cli.rst`).
-5. **Role selection.** The best implementation file comes first, then the best test and docs file when the request asks for them, then the strongest remaining files.
+5. **Role selection.** The best implementation file comes first, then the best test and docs file when the request asks for them. Any further file needs *structural* evidence: it defines a requested identifier, is a graph neighbour, is named after the module, or was mentioned. Shared words alone are not enough.
 6. **Symbol-level excerpts.** Forge excerpts whole functions, classes and doc sections ranked by term density, not arbitrary line windows. Each file also gets an outline with line ranges, so the agent can request exactly the symbol it needs.
 7. **Mentions.** `@file` and `@symbol` mentions are always included.
 
@@ -52,7 +52,7 @@ Budgets come from [`core/profiles.ts`](../extension/src/core/profiles.ts):
 | Profile | Context pack | Compaction trigger | Used for |
 |---|---|---|---|
 | tight | ~2.2k tokens | 5.2k | Providers listed in `forge.tightBudgetProviders` (default `groq`). Groq's free tier rejects any single request above ~7k tokens. |
-| standard | ~7k tokens | 40k | Everyone else |
+| standard | ~7k tokens | 18k | Everyone else |
 
 Each value can be overridden in settings.
 
@@ -78,7 +78,7 @@ Code: [`extension/src/agent/tools.ts`](../extension/src/agent/tools.ts), [`stagi
 | Agents, sessions, turns, streamed events (SDK) | Every run is a TrueForge session. Text, reasoning and tool events stream into the sidebar. Stop calls `sessions.cancel`. |
 | Remote MCP servers | The editor's capabilities are MCP tools, so **the agent decides** what to search, read, change and run. |
 | `requireApprovalForTools` | `submit_for_review` and `propose_edit` need approval. TrueForge's approval request **is** the diff review; Forge answers allow or deny with a reason. |
-| Deferred tool loading (`preloadTools`) | 5 core tools are preloaded; `find_symbol`, `list_files`, `view_staged` and `discard_staged` load on demand. |
+| Deferred tool loading (`preloadTools`) | 5 core tools are preloaded; `find_symbol`, `list_files`, `view_staged` and `discard_staged` load on demand through TrueForge's `list_tools`. These harness calls (`toolInfo.type = "truefoundry-system"`) are shown in the sidebar timeline as *TrueForge list_tools · deferred tool loading*. |
 | Context compaction | Enabled with a per-model trigger. Forge clears its "already shown" cache when TrueForge compacts. |
 | Large tool response handling | Enabled for both agents. |
 | `sessions.update` + `previousTurnId` | **Same-session fallback.** Sessions are created with an inline agent spec (named-agent sessions cannot change agent), so a switch updates the live session's model and continues from the last turn with all tool results. |
