@@ -1,9 +1,15 @@
 {
   "name": "forge-a-thon-extension",
-  "displayName": "Forge-a-thon",
-  "version": "0.0.1",
+  "displayName": "Forge",
+  "version": "0.2.0",
   "publisher": "forge-a-thon",
-  "description": "TrueForge-powered Flask editing with repository discovery, isolated checks and reviewed patches.",
+  "description": "Editor-native coding agent on TrueForge: automatic context assembly with a code graph, multi-file staged edits, sandboxed checks and per-hunk review.",
+  "author": "Team Husttlers",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dash10107/iit-true-forge"
+  },
+  "homepage": "https://github.com/dash10107/iit-true-forge#readme",
   "license": "MIT",
   "engines": {
     "vscode": "^1.100.0"
@@ -12,187 +18,188 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:forge.environmentStatus",
-    "onCommand:forge.taskA",
-    "onCommand:forge.taskACancel",
-    "onCommand:forge.taskAApprove",
-    "onCommand:forge.taskAReject",
-    "onCommand:forge.taskB",
-    "onCommand:forge.taskBCancel",
-    "onView:forge.sidebar"
+    "onStartupFinished"
   ],
   "main": "./out/src/extension.js",
   "contributes": {
     "commands": [
       {
+        "command": "forge.inlineEdit",
+        "title": "Forge: Inline Edit Selection",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "forge.focus",
+        "title": "Forge: Open Agent"
+      },
+      {
+        "command": "forge.stop",
+        "title": "Forge: Stop Current Run"
+      },
+      {
+        "command": "forge.undoLastApply",
+        "title": "Forge: Undo Last Applied Change"
+      },
+      {
         "command": "forge.environmentStatus",
         "title": "Forge: Environment Status"
-      },
-      {
-        "command": "forge.taskA",
-        "title": "Forge: Task A \u2014 Propose Selected Function Patch"
-      },
-      {
-        "command": "forge.taskACancel",
-        "title": "Forge: Cancel Task A Turn"
-      },
-      {
-        "command": "forge.taskAApprove",
-        "title": "Forge: Approve and Apply Task A Hunk"
-      },
-      {
-        "command": "forge.taskAReject",
-        "title": "Forge: Reject Task A Proposal"
-      },
-      {
-        "command": "forge.taskB",
-        "title": "Forge: Task B \u2014 Discover, Verify and Review"
-      },
-      {
-        "command": "forge.taskBCancel",
-        "title": "Forge: Cancel Task B"
       }
     ],
+    "keybindings": [
+      {
+        "command": "forge.inlineEdit",
+        "key": "ctrl+alt+k",
+        "mac": "cmd+alt+k",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "forge.stop",
+        "key": "ctrl+alt+.",
+        "mac": "cmd+alt+.",
+        "when": "!inQuickOpen"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "forge.inlineEdit",
+          "when": "editorTextFocus",
+          "group": "navigation@9"
+        }
+      ]
+    },
     "configuration": {
       "title": "Forge",
       "properties": {
         "forge.trueforgeBaseUrl": {
           "type": "string",
           "default": "http://localhost:8790",
-          "description": "TrueForge local or hosted base URL. Do not put secrets in settings."
+          "description": "TrueForge server URL. Models and API keys are configured in TrueForge, never in Forge."
         },
-        "forge.trueforgeModel": {
+        "forge.fallbackModels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Ordered TrueForge model names to switch to automatically when the selected model fails (network, credentials, quota, overload). Only listed models are ever used."
+        },
+        "forge.maxModelSwitches": {
+          "type": "integer",
+          "default": 2,
+          "minimum": 0,
+          "maximum": 5,
+          "description": "Maximum automatic model switches per run."
+        },
+        "forge.maxModelCalls": {
+          "type": "integer",
+          "default": 40,
+          "minimum": 4,
+          "maximum": 200,
+          "description": "Hard cap on model calls per agent run; staged edits are offered for review when it is reached."
+        },
+        "forge.tightBudgetProviders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "groq"
+          ],
+          "description": "Provider prefixes with strict per-minute token limits; they get a compact context profile."
+        },
+        "forge.contextBudget": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 60000,
+          "description": "Estimated tokens for the automatic context pack (0 = profile default: 2.2k tight, 7k standard)."
+        },
+        "forge.maxToolResultChars": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 60000,
+          "description": "Character cap per tool result (0 = profile default)."
+        },
+        "forge.maxOutputTokens": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 64000,
+          "description": "Model output token limit (0 = profile default)."
+        },
+        "forge.compactionThreshold": {
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 1000000,
+          "description": "Input tokens at which TrueForge compacts the conversation (0 = profile default)."
+        },
+        "forge.reasoningEffort": {
           "type": "string",
           "default": "",
-          "description": "Fully-qualified model name already configured in TrueForge. Leave empty to choose from TrueForge's available models."
+          "enum": [
+            "",
+            "none",
+            "minimal",
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "Optional reasoning effort passed to models that support it."
         },
-        "forge.mcpPort": {
-          "type": "integer",
-          "default": 8791,
-          "minimum": 0,
-          "maximum": 65535,
-          "description": "Loopback port for the read-only workspace MCP tools used by TrueForge. Use 0 to request a free port."
-        },
-        "forge.taskBContextBudget": {
-          "type": "integer",
-          "minimum": 256,
-          "maximum": 16000,
-          "default": 4000,
-          "description": "Estimated repository tokens available for search and read results during one Task B turn."
-        },
-        "forge.taskBSearchResultLimit": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 20,
-          "default": 6,
-          "description": "Maximum ranked paths returned by a repository search."
-        },
-        "forge.taskBMaxReadLines": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 40,
-          "default": 40,
-          "description": "Maximum source lines returned by one read_file tool call."
-        },
-        "forge.taskBMaxToolResultChars": {
-          "type": "integer",
-          "minimum": 1000,
-          "maximum": 20000,
-          "default": 8000,
-          "description": "Hard character limit for one MCP tool response."
-        },
-        "forge.taskBIterationLimit": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 1024,
-          "default": 1024,
-          "description": "Maximum TrueForge agent iterations for one Task B session."
-        },
-        "forge.taskBDeferredTools": {
+        "forge.repoMap": {
           "type": "boolean",
           "default": true,
-          "description": "Use selective TrueForge tool preloading; rare directory browsing remains deferred."
+          "description": "Use the RepoMap code graph for symbol ranking and the find_symbol tool."
         },
-        "forge.taskBEnableCompaction": {
+        "forge.codeMode": {
           "type": "boolean",
           "default": false,
-          "description": "Enable TrueForge context compaction at 4,400 estimated input tokens. Keep disabled for providers with tight output-token quotas."
+          "description": "Enable TrueForge's sandbox/Code Mode. Adds ~1.8k harness tokens per request; useful for large-quota models."
         },
-        "forge.taskBToolPaceMs": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 120000,
-          "default": 0,
-          "description": "Optional minimum interval between tool responses for models with low input-token rate limits."
-        },
-        "forge.taskBFallbackModels": {
+        "forge.allowedCommands": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "maxItems": 2,
           "default": [
-            "google-gemini/gemini-3-5-flash-lite",
-            "openrouter/openrouter-free"
+            "python",
+            "python3",
+            "pytest",
+            "flask",
+            "node",
+            "npm"
           ],
-          "description": "Up to two ordered fallback models configured in TrueForge. Rate-limited provider families are skipped; transient network and server failures get one bounded retry."
+          "description": "Executables the agent may run (in a disposable snapshot with staged edits)."
         },
-        "forge.taskAFallbackModels": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "maxItems": 2,
-          "default": [
-            "google-gemini/gemini-3-5-flash-lite",
-            "openrouter/openrouter-free"
-          ],
-          "description": "Ordered TrueForge models used when the Task A provider fails."
+        "forge.pythonPath": {
+          "type": "string",
+          "default": "",
+          "description": "Python interpreter for run_command (defaults to .venv/bin/python in the workspace)."
         },
-        "forge.providerMaxRetries": {
+        "forge.commandTimeoutSeconds": {
           "type": "integer",
-          "minimum": 0,
-          "maximum": 2,
-          "default": 1,
-          "description": "Maximum transient retries per provider before switching models."
+          "default": 120,
+          "minimum": 5,
+          "maximum": 600,
+          "description": "Timeout for one run_command."
         },
-        "forge.freeOnly": {
+        "forge.sandboxCommands": {
           "type": "boolean",
           "default": true,
-          "description": "Restrict automatic model routing to the configured free-model allowlist. Free-tier availability and quotas depend on the provider account."
+          "description": "On macOS, run commands under sandbox-exec with network and outside writes denied."
         },
-        "forge.taskBMaxInputTokens": {
-          "type": "integer",
-          "minimum": 2048,
-          "maximum": 100000,
-          "default": 12000,
-          "description": "Estimated per-request input limit including schemas, instructions, history and tool results."
-        },
-        "forge.taskBMaxOutputTokens": {
-          "type": "integer",
-          "minimum": 512,
-          "maximum": 8192,
-          "default": 2400,
-          "description": "Reserve enough model output tokens for staged patch arguments."
-        },
-        "forge.taskBModelContextWindow": {
-          "type": "integer",
-          "minimum": 8192,
-          "maximum": 1000000,
-          "default": 16384,
-          "description": "Conservative model context-window limit used to reserve output capacity."
-        },
-        "forge.repoMapEnabled": {
+        "forge.autoVerify": {
           "type": "boolean",
           "default": true,
-          "description": "Enable local RepoMap symbol tools over a private tracked-file mirror. Disable to use the existing repository search."
+          "description": "After each stage_edits, run the relevant tests in a sandboxed snapshot automatically (no extra model call) and report the result to the agent and the review card."
         },
-        "forge.repoMapMaxResults": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 10,
-          "default": 5,
-          "description": "Maximum symbol or relationship results per RepoMap tool call."
+        "forge.verifyCommand": {
+          "type": "string",
+          "default": "",
+          "description": "Optional verification command; {tests} is replaced by the inferred test files (default for Python: python -m pytest {tests} -q)."
         }
       }
     },
@@ -209,7 +216,7 @@
       "forge": [
         {
           "id": "forge.sidebar",
-          "name": "Forge Agent",
+          "name": "Agent",
           "type": "webview"
         }
       ]
@@ -220,14 +227,9 @@
     "watch": "tsc -watch -p ./",
     "check-types": "tsc --noEmit -p ./",
     "test": "npm run compile && vscode-test",
-    "test:extension": "npm test",
-    "test:safety": "npm run compile && node --test scripts/*.test.cjs",
-    "trueforge:smoke": "node scripts/trueforge-connectivity.mjs",
+    "test:unit": "npm run compile && node --test scripts/*.test.cjs",
     "trueforge:models": "node scripts/list-trueforge-models.mjs",
-    "task-a:live": "npm run compile && node scripts/task-a-live.mjs",
-    "task-a:review": "npm run compile && node scripts/review-task-a.mjs",
-    "task-b:live": "npm run compile && node scripts/task-b-live.mjs",
-    "task-b:recover": "node scripts/recover-task-b.mjs"
+    "agent:live": "npm run compile && node scripts/agent-live.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
