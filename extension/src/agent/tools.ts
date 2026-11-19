@@ -85,9 +85,10 @@ export class AgentTools {
       annotations: safe,
     }, args => {
       const items = [...(args.items ?? []), ...(args.path ? [{ path: args.path, symbol: args.symbol, start_line: args.start_line, end_line: args.end_line }] : [])].slice(0, 6);
+      const prepare = () => this.parseOutlines(items.map(i => i.path.replace(/^\.\//, "")));
       return this.call("read_code", `Read ${items.map(i => `${i.path.split("/").pop()}${i.symbol ? ":" + i.symbol : i.start_line ? `:${i.start_line}-${i.end_line ?? ""}` : ""}`).join(", ")}`, undefined, () => {
         if (!items.length) throw new Error("Provide items: [{path, symbol | start_line, end_line}].");
-        return this.read(items);
+        return prepare().then(() => this.read(items));
       });
     });
 
@@ -155,6 +156,15 @@ export class AgentTools {
       const message = error instanceof Error ? error.message : String(error);
       this.emit({ type: "tool.end", id, ok: false, ms: Date.now() - t0, summary: message.slice(0, 200), preview: message.slice(0, 1500) });
       return { isError: true, content: [{ type: "text" as const, text: bound(message, 2000) }] };
+    }
+  }
+
+  /** Ask RepoMap for exact AST symbol ranges before resolving symbols (falls back to patterns). */
+  private async parseOutlines(files: string[]) {
+    if (!this.repomap) return;
+    for (const file of new Set(files)) {
+      if (!this.ws.has(file) || this.ws.hasParsedOutline(file)) continue;
+      try { this.ws.setParsedOutline(file, await this.repomap.members(file, this.signal)); } catch { /* pattern outline */ }
     }
   }
 

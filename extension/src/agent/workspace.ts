@@ -24,7 +24,7 @@ export class Workspace {
   readonly isGit: boolean;
   readonly maxReadLines = 200;
   private readonly cache = new Map<string, { mtimeMs: number; size: number; text: string }>();
-  private readonly outlines = new Map<string, { text: string; symbols: OutlineSymbol[] }>();
+  private readonly outlines = new Map<string, { text: string; symbols: OutlineSymbol[]; parsed: boolean }>();
 
   constructor(readonly root: string) {
     this.root = realpathSync(root);
@@ -72,8 +72,25 @@ export class Workspace {
     const cached = this.outlines.get(file);
     if (cached?.text === text) return cached.symbols;
     const symbols = buildOutline(file, text.split("\n"));
-    this.outlines.set(file, { text, symbols });
+    this.outlines.set(file, { text, symbols, parsed: false });
     return symbols;
+  }
+
+  /** True when the outline came from a real parser (RepoMap's AST index), not patterns. */
+  hasParsedOutline(file: string) { try { return this.outlines.get(file)?.text === this.source(file) && this.outlines.get(file)!.parsed; } catch { return false; } }
+
+  /**
+   * Install parser-derived symbols (RepoMap AST members: dotted names, exact line ranges).
+   * Files the parser does not cover (e.g. reStructuredText) keep the pattern outline.
+   */
+  setParsedOutline(file: string, members: { name: string; kind: string; line: number; end: number }[]) {
+    if (!members.length) return;
+    const text = this.source(file), lines = text.split("\n");
+    const symbols = members.filter(m => m.line >= 1 && m.end >= m.line && m.end <= lines.length).map(m => ({
+      name: m.name.split(".").pop()!, kind: m.kind, line: m.line, end: m.end, depth: (m.name.split(".").length - 1) * 4,
+      text: (lines[m.line - 1] ?? "").trim().slice(0, 140),
+    })).sort((a, b) => a.line - b.line || a.depth - b.depth);
+    this.outlines.set(file, { text, symbols, parsed: true });
   }
 
   /** Innermost symbol containing a 1-based line. */

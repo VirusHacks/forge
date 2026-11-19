@@ -86,6 +86,13 @@ export class RepoMapIndex {
     const hash=createHash("sha256").update(this.currentSource(x.file)).digest("hex").slice(0,12);
     return {id:`${x.file}:${x.line}#${hash}`,name:x.name.slice(0,160),kind:String(x.kind??"symbol").slice(0,40),file:x.file,line:x.line,end:Number.isSafeInteger(x.end)?x.end:undefined};
   }
+  /** AST members of one file (functions, classes, methods with exact line ranges). */
+  async members(file:string,signal?:AbortSignal):Promise<{name:string;kind:string;line:number;end:number}[]>{return this.execute(async()=>{
+    if(!this.repo.files.includes(file))return [];
+    const raw=await this.request("context",{target:file,code_lines:0},signal);
+    return (Array.isArray(raw.members)?raw.members:[]).filter((m:any)=>m&&m.file===file&&typeof m.name==="string"&&Number.isSafeInteger(m.line)&&Number.isSafeInteger(m.end))
+      .map((m:any)=>({name:String(m.name).slice(0,200),kind:String(m.kind??"symbol").slice(0,40),line:m.line,end:m.end}));
+  });}
   async find(query:string,signal?:AbortSignal){return this.execute(async()=>{
     const raw=await this.request("search",{query,limit:Math.min(20,Math.max(1,this.maxResults)*3),include_tests:true},signal);
     const hits=[];for(const h of raw.hits??[]){const symbol=this.symbol(h.symbol);if(!symbol)continue;

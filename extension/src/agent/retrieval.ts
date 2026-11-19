@@ -22,7 +22,7 @@ export interface PackExcerpt { start: number; end: number; label: string; text: 
 export interface PackFile { path: string; role: Role; score: number; reasons: string[]; outline: string; excerpts: PackExcerpt[]; tokens: number }
 export interface GraphNode { name: string; kind?: string; file: string; line: number }
 /** The RepoMap neighbourhood of the most relevant symbol (static analysis, verified against source lines). */
-export interface GraphInfo { focus: GraphNode; related: GraphNode[]; callers: GraphNode[]; callees: GraphNode[]; tests: string[] }
+export interface GraphInfo { focus: GraphNode; related: GraphNode[]; callers: GraphNode[]; callees: GraphNode[]; tests: string[]; /** Callers are kept only when the call-site line names the symbol. */ verifiedEdges: number; droppedEdges: number }
 export interface ContextPack { terms: string[]; files: PackFile[]; tokens: number; budget: number; omitted: { path: string; score: number }[]; graph: boolean; graphInfo?: GraphInfo; ms: number }
 export interface Mentions { files: string[]; symbols: { name: string; path: string; line: number }[] }
 
@@ -157,7 +157,9 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
       const top = found.hits.find((h: any) => h.file === lexicalBest) ?? found.hits[0];
       if (top) {
         const ctx = await opts.repomap.context(top.id, opts.signal);
-        for (const rel of ctx.callers.slice(0, 3)) {
+        // Keep only edges whose call-site line really names the symbol ("verified at call site").
+        const verified = ctx.callers.filter((r: any) => r.referenceMatch === "name present in source");
+        for (const rel of verified.slice(0, 3)) {
           const c = get(rel.siteFile);
           c.score += 2;
           c.reasons.push(`calls ${top.name} (static graph)`);
@@ -170,9 +172,10 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
         graphInfo = {
           focus: node(top),
           related: found.hits.filter((h: any) => h !== top).slice(0, 4).map((h: any) => node(h)),
-          callers: ctx.callers.slice(0, 4).map((r: any) => node(r.symbol, r.siteFile, r.at ?? r.symbol.line)),
+          callers: verified.slice(0, 4).map((r: any) => node(r.symbol, r.siteFile, r.at ?? r.symbol.line)),
           callees: ctx.callees.slice(0, 4).map((r: any) => node(r.symbol)),
           tests: ctx.tests.slice(0, 4),
+          verifiedEdges: verified.length, droppedEdges: ctx.callers.length - verified.length,
         };
       }
     } catch { /* RepoMap is optional; lexical ranking still works. */ }
@@ -211,6 +214,12 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
     const best = sorted.find(x => x.role === c.role)?.score ?? 0;
     const sameRole = selected.filter(x => x.role === c.role).length;
     if (!selected.includes(c) && c.structural && sameRole < LIMITS[c.role] && c.score >= best * 0.3) selected.push(c);
+  }
+  // Exact symbol ranges from RepoMap's AST index for the chosen files (patterns remain the fallback).
+  if (opts.repomap) {
+    await Promise.all(selected.map(async c => {
+      try { if (!ws.hasParsedOutline(c.path)) ws.setParsedOutline(c.path, await opts.repomap!.members(c.path, opts.signal)); } catch { /* keep the pattern outline */ }
+    }));
   }
   const files: PackFile[] = [];
   let used = 0;
@@ -298,7 +307,7 @@ export function renderPack(pack: ContextPack): string {
     const at = (n: GraphNode) => `${n.name} (${n.file}:${n.line})`;
     out.push("", "Code graph (RepoMap static analysis; edges are inferred, verify in source):",
       `- focus: ${at(g.focus)}${g.focus.kind ? ` [${g.focus.kind}]` : ""}`,
-      g.callers.length ? `- called from: ${g.callers.map(at).join(", ")}` : "",
+      g.callers.length ? `- called from (each verified at its call-site line): ${g.callers.map(at).join(", ")}` : "",
       g.callees.length ? `- calls: ${g.callees.map(at).join(", ")}` : "",
       g.tests.length ? `- tests: ${g.tests.join(", ")}` : "",
       g.related.length ? `- related symbols: ${g.related.map(at).join(", ")}` : "");

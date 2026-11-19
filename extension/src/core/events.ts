@@ -23,5 +23,5 @@ export interface ContextFileSummary { path: string; role: string; reasons: strin
 export interface ReviewHunkSummary { index: number; path: string; line: number; added: number; removed: number; preview: string; newFile?: boolean }
 export interface VerificationSummary { command: string; exitCode: number; summary: string; stale: boolean }
 export interface RunMetrics { modelCalls: number; toolCalls: number; inputTokens: number; outputTokens: number; ms: number; models: string[] }
-export interface GraphSummary { focus: GraphNodeSummary; related: GraphNodeSummary[]; callers: GraphNodeSummary[]; callees: GraphNodeSummary[]; tests: string[] }
+export interface GraphSummary { focus: GraphNodeSummary; related: GraphNodeSummary[]; callers: GraphNodeSummary[]; callees: GraphNodeSummary[]; tests: string[]; verifiedEdges?: number; droppedEdges?: number }
 export interface GraphNodeSummary { name: string; kind?: string; file: string; line: number }

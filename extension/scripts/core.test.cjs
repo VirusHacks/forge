@@ -267,3 +267,13 @@ test("committed dotenv fixtures reach command snapshots but never agent reads", 
 test("'Request too large' is a size failure even when sent as 429", () => {
   assert.equal(classifyFailure(new Error("Request failed (429): Request too large for model `qwen` on output tokens per minute (OTPM): Limit 1000")), "context_exceeded");
 });
+
+test("parser outlines (RepoMap AST members) override pattern outlines, including dotted methods", () => {
+  const root = repo({ "m.py": "class A:\n    def run(self):\n        x = '''\ndef fake():\n'''\n        return x\n" });
+  const ws = new Workspace(root);
+  assert.ok(ws.outline("m.py").some(s => s.name === "fake"), "the pattern outline is fooled by a string literal");
+  ws.setParsedOutline("m.py", [{ name: "A", kind: "class", line: 1, end: 6 }, { name: "A.run", kind: "method", line: 2, end: 6 }]);
+  assert.ok(ws.hasParsedOutline("m.py"));
+  assert.ok(!ws.outline("m.py").some(s => s.name === "fake"), "the parser outline is exact");
+  assert.deepEqual([ws.findSymbol("m.py", "A.run").line, ws.findSymbol("m.py", "A.run").end], [2, 6]);
+});
