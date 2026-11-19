@@ -1,0 +1,246 @@
+{
+  "name": "forge-a-thon-extension",
+  "displayName": "Forge-a-thon",
+  "version": "0.0.1",
+  "publisher": "forge-a-thon",
+  "description": "TrueForge-powered Flask editing with repository discovery, isolated checks and reviewed patches.",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:forge.environmentStatus",
+    "onCommand:forge.taskA",
+    "onCommand:forge.taskACancel",
+    "onCommand:forge.taskAApprove",
+    "onCommand:forge.taskAReject",
+    "onCommand:forge.taskB",
+    "onCommand:forge.taskBCancel",
+    "onView:forge.sidebar"
+  ],
+  "main": "./out/src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "forge.environmentStatus",
+        "title": "Forge: Environment Status"
+      },
+      {
+        "command": "forge.taskA",
+        "title": "Forge: Task A \u2014 Propose Selected Function Patch"
+      },
+      {
+        "command": "forge.taskACancel",
+        "title": "Forge: Cancel Task A Turn"
+      },
+      {
+        "command": "forge.taskAApprove",
+        "title": "Forge: Approve and Apply Task A Hunk"
+      },
+      {
+        "command": "forge.taskAReject",
+        "title": "Forge: Reject Task A Proposal"
+      },
+      {
+        "command": "forge.taskB",
+        "title": "Forge: Task B \u2014 Discover, Verify and Review"
+      },
+      {
+        "command": "forge.taskBCancel",
+        "title": "Forge: Cancel Task B"
+      }
+    ],
+    "configuration": {
+      "title": "Forge",
+      "properties": {
+        "forge.trueforgeBaseUrl": {
+          "type": "string",
+          "default": "http://localhost:8790",
+          "description": "TrueForge local or hosted base URL. Do not put secrets in settings."
+        },
+        "forge.trueforgeModel": {
+          "type": "string",
+          "default": "",
+          "description": "Fully-qualified model name already configured in TrueForge. Leave empty to choose from TrueForge's available models."
+        },
+        "forge.mcpPort": {
+          "type": "integer",
+          "default": 8791,
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "Loopback port for the read-only workspace MCP tools used by TrueForge. Use 0 to request a free port."
+        },
+        "forge.taskBContextBudget": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 16000,
+          "default": 4000,
+          "description": "Estimated repository tokens available for search and read results during one Task B turn."
+        },
+        "forge.taskBSearchResultLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20,
+          "default": 6,
+          "description": "Maximum ranked paths returned by a repository search."
+        },
+        "forge.taskBMaxReadLines": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 40,
+          "default": 40,
+          "description": "Maximum source lines returned by one read_file tool call."
+        },
+        "forge.taskBMaxToolResultChars": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 20000,
+          "default": 8000,
+          "description": "Hard character limit for one MCP tool response."
+        },
+        "forge.taskBIterationLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64,
+          "default": 24,
+          "description": "Maximum TrueForge agent iterations for one Task B session."
+        },
+        "forge.taskBDeferredTools": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use selective TrueForge tool preloading; rare directory browsing remains deferred."
+        },
+        "forge.taskBEnableCompaction": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable TrueForge context compaction at 4,400 estimated input tokens. Keep disabled for providers with tight output-token quotas."
+        },
+        "forge.taskBToolPaceMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 120000,
+          "default": 0,
+          "description": "Optional minimum interval between tool responses for models with low input-token rate limits."
+        },
+        "forge.taskBFallbackModels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "default": [
+            "google-gemini/gemini-3-5-flash-lite",
+            "openrouter/openrouter-free"
+          ],
+          "description": "Up to two ordered fallback models configured in TrueForge. Rate-limited provider families are skipped; transient network and server failures get one bounded retry."
+        },
+        "forge.taskAFallbackModels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "default": [
+            "google-gemini/gemini-3-5-flash-lite",
+            "openrouter/openrouter-free"
+          ],
+          "description": "Ordered TrueForge models used when the Task A provider fails."
+        },
+        "forge.providerMaxRetries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2,
+          "default": 1,
+          "description": "Maximum transient retries per provider before switching models."
+        },
+        "forge.freeOnly": {
+          "type": "boolean",
+          "default": true,
+          "description": "Restrict automatic model routing to the configured free-model allowlist. Free-tier availability and quotas depend on the provider account."
+        },
+        "forge.taskBMaxInputTokens": {
+          "type": "integer",
+          "minimum": 2048,
+          "maximum": 100000,
+          "default": 12000,
+          "description": "Estimated per-request input limit including schemas, instructions, history and tool results."
+        },
+        "forge.taskBMaxOutputTokens": {
+          "type": "integer",
+          "minimum": 512,
+          "maximum": 8192,
+          "default": 2400,
+          "description": "Reserve enough model output tokens for staged patch arguments."
+        },
+        "forge.taskBModelContextWindow": {
+          "type": "integer",
+          "minimum": 8192,
+          "maximum": 1000000,
+          "default": 16384,
+          "description": "Conservative model context-window limit used to reserve output capacity."
+        },
+        "forge.repoMapEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable local RepoMap symbol tools over a private tracked-file mirror. Disable to use the existing repository search."
+        },
+        "forge.repoMapMaxResults": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "default": 5,
+          "description": "Maximum symbol or relationship results per RepoMap tool call."
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "forge",
+          "title": "Forge",
+          "icon": "media/forge.svg"
+        }
+      ]
+    },
+    "views": {
+      "forge": [
+        {
+          "id": "forge.sidebar",
+          "name": "Forge Agent",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "check-types": "tsc --noEmit -p ./",
+    "test": "npm run compile && vscode-test",
+    "test:extension": "npm test",
+    "test:safety": "npm run compile && node --test scripts/*.test.cjs",
+    "trueforge:smoke": "node scripts/trueforge-connectivity.mjs",
+    "trueforge:models": "node scripts/list-trueforge-models.mjs",
+    "task-a:live": "npm run compile && node scripts/task-a-live.mjs",
+    "task-a:review": "npm run compile && node scripts/review-task-a.mjs",
+    "task-b:live": "npm run compile && node scripts/task-b-live.mjs",
+    "task-b:recover": "node scripts/recover-task-b.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@sylphx/repomap": "1.9.0",
+    "@truefoundry/trueforge-sdk": "0.185.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.0",
+    "@types/vscode": "^1.100.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "typescript": "^5.9.3"
+  }
+}

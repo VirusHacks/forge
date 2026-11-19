@@ -1,0 +1,23 @@
+# Task B: user-run failure and recovery changes
+
+19 November 2026. This documents the user's actual sidebar run and the subsequent local fixes. No additional model call was made for these fixes.
+
+## What happened
+
+The saved TrueForge records show two sessions for the original Task B request: an OpenRouter session with 17 completed model responses, followed by a Gemini session with 16. Repository investigation and search repeatedly returned errors because the GUI-launched VS Code extension host could not locate `rg` on its PATH. The models attempted bounded file reads without useful search results, exhausted the configured 2,500-token repository retrieval budget and both sessions ended cancelled. No candidate reached verification or review.
+
+The user then entered `please continue`. The old sidebar treated that text as an entirely new task, rather than retaining the original request. Three more sessions followed: Qwen first requested an unavailable tool, then hit 429; Gemini inspected repository files without a real objective and ended asking what to do. The extension incorrectly reported the confusing `Turn done; reviewed transaction applied=false` even though no review occurred. The prior checkpoint filename was shared by all tasks in a workspace, so the later continuation task overwrote that workspace's earlier checkpoint. Neither the original nor the continuation run had staged edits.
+
+Across the five saved sessions, the completed messages recorded **49 model responses, 48 requested tool calls, 171,598 input tokens and 2,401 output tokens**. Input counts can include cached tokens, and rejected calls/provider-internal retries are not fully visible. These values are usage reported by TrueForge, not a billing total. There were no approved or applied edits.
+
+## Fixes
+
+- Repository search keeps ripgrep where available and falls back to bounded, deterministic in-process search over tracked regular files if it is missing from PATH. It caches the source within each search, retains path safety, and logs the fallback once. Reproduced locally with PATH set to `/usr/bin:/bin`: the official prompt selected `src/flask/cli.py`, `tests/test_cli.py`, and `docs/cli.rst` in 178 ms using 366 estimated source tokens. This is deterministic local retrieval, not a model call.
+- Repository retrieval exhaustion now stops the current turn and hands off its saved state to a bounded fallback, rather than letting the model repeatedly request unreadable excerpts. Retrieval exhaustion is distinct from a provider context overflow; a new model gets a fresh retrieval budget, while an actual provider overflow still reduces context. Defaults are now 4,000 estimated repository tokens and 12,000 estimated complete-request input tokens. They remain configurable and are estimates, not guarantees of a provider's context or rolling quota.
+- `please continue`, `continue`, `resume`, and `go on` in the current sidebar session reuse the selected earlier run's original task. A usable checkpoint can be resumed even before edits were staged. Checkpoint paths include both workspace and task, preventing unrelated prompts from overwriting one another. The overwritten legacy checkpoint cannot be reconstructed as staged work; the saved TrueForge sessions show there were no staged changes.
+- An agent turn that ends without a verified proposal is reported as an incomplete model response, which may switch to an eligible fallback. A declined review is separately reported and cannot trigger fallback. Invalid provider tool-call validation is classified as malformed output for bounded fallback.
+- The sidebar now shows a compact progress line and one collapsed Activity section rather than raw JSON cards. Expanded activity contains human-readable tool actions, selected files/reasons, checks and model switches. The composer uses a single compact surface with model, file/symbol attachments, Send/Stop, refresh and Undo controls. The existing per-hunk review, explicit save and cancellation boundaries remain.
+
+## Verification and limits
+
+The final local headless suite passed 49/49; the VS Code host suite passed 31/31. Tests include missing-ripgrep discovery, retrieval-exhaustion handoff, same-objective continuation, bounded fallback, streaming UI, hunk approval, cancellation and save safety. The actual three-file retrieval was checked locally without a provider call. No updated live Task B proposal, official agent-produced patch, or end-to-end model result has yet been observed. The user should reopen/reload the extension host to load the changed code, then run the full Task B request again. Session history in the sidebar is in memory and is cleared on reload; TrueForge's saved sessions remain available in its UI.

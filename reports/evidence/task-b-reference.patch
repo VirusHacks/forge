@@ -1,0 +1,83 @@
+diff --git a/docs/cli.rst b/docs/cli.rst
+index a72e6d5..c933634 100644
+--- a/docs/cli.rst
++++ b/docs/cli.rst
+@@ -554,3 +554,11 @@ PyCharm window and click the play button next to it to run the server.
+ 
+ Now that you have a configuration for ``flask run``, you can copy that configuration and
+ change the *Parameters* argument to run a different CLI command.
++
++
++Configuration
++-------------
++
++Use ``flask config`` to print the loaded application's configuration as JSON.
++Keys containing SECRET, PASSWORD, TOKEN, or KEY have their values masked as
++``***``.
+diff --git a/src/flask/cli.py b/src/flask/cli.py
+index ed11f25..6b3a7a4 100644
+--- a/src/flask/cli.py
++++ b/src/flask/cli.py
+@@ -4,6 +4,7 @@ import ast
+ import collections.abc as cabc
+ import importlib.metadata
+ import inspect
++import json
+ import os
+ import platform
+ import re
+@@ -594,6 +595,7 @@ class FlaskGroup(AppGroup):
+             self.add_command(run_command)
+             self.add_command(shell_command)
+             self.add_command(routes_command)
++            self.add_command(config_command)
+ 
+         self._loaded_plugin_commands = False
+ 
+@@ -1053,6 +1055,18 @@ def shell_command() -> None:
+     code.interact(banner=banner, local=ctx)
+ 
+ 
++@click.command("config", short_help="Show the app configuration as JSON.")
++@with_appcontext
++def config_command() -> None:
++    """Show configuration, masking sensitive values."""
++    sensitive = ("SECRET", "PASSWORD", "TOKEN", "KEY")
++    values = {
++        key: "***" if any(part in key.upper() for part in sensitive) else value
++        for key, value in current_app.config.items()
++    }
++    click.echo(json.dumps(values, default=str))
++
++
+ @click.command("routes", short_help="Show the routes for the app.")
+ @click.option(
+     "--sort",
+diff --git a/tests/test_cli.py b/tests/test_cli.py
+index e254c1d..829c703 100644
+--- a/tests/test_cli.py
++++ b/tests/test_cli.py
+@@ -1,6 +1,7 @@
+ # This file was part of Flask-CLI and was modified under the terms of
+ # its Revised BSD License. Copyright © 2015 CERN.
+ import importlib.metadata
++import json
+ import os
+ import platform
+ import ssl
+@@ -700,3 +701,15 @@ def test_cli_empty(app):
+ def test_run_exclude_patterns():
+     ctx = run_command.make_context("run", ["--exclude-patterns", __file__])
+     assert ctx.params["exclude_patterns"] == [__file__]
++
++
++def test_config_command_masks_sensitive_values(app, runner):
++    app.config.update(PUBLIC_VALUE="visible", SECRET_VALUE="secret", DB_PASSWORD="pw", API_TOKEN="tok", API_KEY="key")
++    result = runner.invoke(FlaskGroup(create_app=lambda: app), ["config"])
++    assert result.exit_code == 0, result.output
++    values = json.loads(result.output)
++    assert values["PUBLIC_VALUE"] == "visible"
++    for key in ("SECRET_VALUE", "DB_PASSWORD", "API_TOKEN", "API_KEY"):
++        assert values[key] == "***"
++    help_result = runner.invoke(FlaskGroup(create_app=lambda: app), ["--help"])
++    assert "config" in help_result.output

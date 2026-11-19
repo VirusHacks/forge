@@ -1,0 +1,221 @@
+{
+  "revision": "22d924701a6ae2e4cd01e9a15bbaf3946094af65",
+  "modelCalls": 0,
+  "repomapEmbedding": "disabled",
+  "baseline": {
+    "ms": 146.1,
+    "toolCalls": 1,
+    "estimatedSourceTokens": 366,
+    "estimatedResponseTokens": 929,
+    "paths": {
+      "implementation": [
+        "src/flask/cli.py"
+      ],
+      "test": [
+        "tests/test_cli.py"
+      ],
+      "documentation": [
+        "docs/cli.rst"
+      ]
+    }
+  },
+  "queries": [
+    {
+      "query": "get_debug_flag",
+      "ms": 146.5,
+      "estimatedResponseTokens": 667,
+      "hits": [
+        {
+          "name": "get_debug_flag",
+          "file": "src/flask/helpers.py",
+          "line": 28,
+          "end": 33,
+          "id": "src/flask/helpers.py:28#ac96607bbfc9"
+        },
+        {
+          "name": "ScriptInfo",
+          "file": "src/flask/cli.py",
+          "line": 293,
+          "end": 372,
+          "id": "src/flask/cli.py:293#3df87bdbe071"
+        },
+        {
+          "name": "App.make_config",
+          "file": "src/flask/sansio/app.py",
+          "line": 482,
+          "end": 496,
+          "id": "src/flask/sansio/app.py:482#c211944500e4"
+        },
+        {
+          "name": "Flask.run",
+          "file": "src/flask/app.py",
+          "line": 546,
+          "end": 667,
+          "id": "src/flask/app.py:546#93bb56f0b1d1"
+        },
+        {
+          "name": "Config.get_namespace",
+          "file": "src/flask/config.py",
+          "line": 323,
+          "end": 364,
+          "id": "src/flask/config.py:323#3e2a85d033da"
+        }
+      ]
+    },
+    {
+      "query": "Add a new built-in CLI command flask config that prints the loaded application's configuration as JSON, masking the values of any key containing SECRET, PASSWORD, TOKEN or KEY as \"***\". It must appear in flask --help, be covered by a test, and be documented alongside the other built-in commands.",
+      "ms": 22.5,
+      "estimatedResponseTokens": 742,
+      "hits": [
+        {
+          "name": "FlaskGroup",
+          "file": "src/flask/cli.py",
+          "line": 531,
+          "end": 696,
+          "id": "src/flask/cli.py:531#3df87bdbe071"
+        },
+        {
+          "name": "Flask.test_cli_runner",
+          "file": "src/flask/app.py",
+          "line": 727,
+          "end": 742,
+          "id": "src/flask/app.py:727#93bb56f0b1d1"
+        },
+        {
+          "name": "App.add_template_test",
+          "file": "src/flask/sansio/app.py",
+          "line": 727,
+          "end": 738,
+          "id": "src/flask/sansio/app.py:727#c211944500e4"
+        },
+        {
+          "name": "Config",
+          "file": "src/flask/config.py",
+          "line": 50,
+          "end": 367,
+          "id": "src/flask/config.py:50#3e2a85d033da"
+        },
+        {
+          "name": "FlaskCliRunner",
+          "file": "src/flask/testing.py",
+          "line": 265,
+          "end": 298,
+          "id": "src/flask/testing.py:265#cf30bb5f1841"
+        }
+      ]
+    },
+    {
+      "query": "add_command",
+      "ms": 22.2,
+      "estimatedResponseTokens": 645,
+      "hits": [
+        {
+          "name": "FlaskGroup.__init__",
+          "file": "src/flask/cli.py",
+          "line": 563,
+          "end": 598,
+          "id": "src/flask/cli.py:563#3df87bdbe071"
+        },
+        {
+          "name": "Blueprint.register",
+          "file": "src/flask/sansio/blueprints.py",
+          "line": 273,
+          "end": 377,
+          "id": "src/flask/sansio/blueprints.py:273#4ea7beec4919"
+        },
+        {
+          "name": "Flask.__init__",
+          "file": "src/flask/app.py",
+          "line": 226,
+          "end": 279,
+          "id": "src/flask/app.py:226#93bb56f0b1d1"
+        },
+        {
+          "name": "FlaskGroup._load_plugin_commands",
+          "file": "src/flask/cli.py",
+          "line": 600,
+          "end": 615,
+          "id": "src/flask/cli.py:600#3df87bdbe071"
+        },
+        {
+          "name": "App.add_template_filter",
+          "file": "src/flask/sansio/app.py",
+          "line": 686,
+          "end": 695,
+          "id": "src/flask/sansio/app.py:686#c211944500e4"
+        }
+      ]
+    },
+    {
+      "query": "test CLI config",
+      "ms": 21.2,
+      "estimatedResponseTokens": 592,
+      "hits": [
+        {
+          "name": "Flask.test_cli_runner",
+          "file": "src/flask/app.py",
+          "line": 727,
+          "end": 742,
+          "id": "src/flask/app.py:727#93bb56f0b1d1"
+        },
+        {
+          "name": "FlaskCliRunner",
+          "file": "src/flask/testing.py",
+          "line": 265,
+          "end": 298,
+          "id": "src/flask/testing.py:265#cf30bb5f1841"
+        },
+        {
+          "name": "main",
+          "file": "src/flask/cli.py",
+          "line": 1130,
+          "end": 1131,
+          "id": "src/flask/cli.py:1130#3df87bdbe071"
+        },
+        {
+          "name": "Config",
+          "file": "src/flask/config.py",
+          "line": 50,
+          "end": 367,
+          "id": "src/flask/config.py:50#3e2a85d033da"
+        },
+        {
+          "name": "test_cli_runner_class",
+          "file": "tests/test_testing.py",
+          "line": 327,
+          "end": 336,
+          "id": "tests/test_testing.py:327#ebfc988c866b"
+        }
+      ]
+    }
+  ],
+  "context": {
+    "ms": 20.4,
+    "estimatedResponseTokens": 780,
+    "symbol": {
+      "id": "src/flask/helpers.py:28#ac96607bbfc9",
+      "name": "get_debug_flag",
+      "kind": "function",
+      "file": "src/flask/helpers.py",
+      "line": 28,
+      "end": 33
+    },
+    "tests": [
+      "tests/test_cli.py",
+      "tests/test_helpers.py"
+    ]
+  },
+  "trace": {
+    "ms": 69.3,
+    "estimatedResponseTokens": 787,
+    "callerCount": 5,
+    "tests": [
+      "tests/test_basic.py",
+      "tests/test_blueprints.py",
+      "tests/test_helpers.py",
+      "tests/test_regression.py",
+      "tests/test_signals.py"
+    ]
+  },
+  "repomapProcessStarts": 1
+}

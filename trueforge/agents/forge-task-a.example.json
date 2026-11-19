@@ -1,0 +1,36 @@
+{
+  "name": "forge-task-a-<workspace-hash>",
+  "description": "TrueForge agent for a selected-function Flask Task A rehearsal.",
+  "manifest": {
+    "model": {
+      "name": "<fully-qualified-model-selected-from-TrueForge>",
+      "params": {
+        "max_tokens": 900,
+        "temperature": 0
+      }
+    },
+    "instructions": "Inspect only the selected Python function. Call search_repository and read_file with the supplied arguments in one batch if possible. After the tools return, answer with one JSON object: path, originalText, replacementText, explanation. In the docstring describe the behavior of an unset variable, an explicitly empty string, and every recognized literal. Copy the original selected function exactly. Preserve unrelated behavior.",
+    "mcp_servers": [
+      {
+        "name": "forge-workspace-<workspace-hash>",
+        "enable_tools": [
+          "read_file",
+          "search_repository"
+        ],
+        "preload": true
+      }
+    ],
+    "config": {
+      "iteration_limit": 5,
+      "ask_user_questions": {
+        "enabled": false
+      },
+      "dynamic_sub_agents": {
+        "enabled": false
+      },
+      "generative_ui": {
+        "enabled": false
+      }
+    }
+  }
+}
