@@ -1,0 +1,9 @@
+{
+  "_comment": "Example VS Code user settings for Forge. Model names are TrueForge model names (provider/model).",
+  "forge.trueforgeBaseUrl": "http://localhost:8790",
+  "forge.fallbackModels": ["groq/qwen-3-8-27b", "openrouter/openrouter-free"],
+  "forge.pythonPath": "/absolute/path/to/project/.venv/bin/python",
+  "forge.maxModelCalls": 40,
+  "forge.tightBudgetProviders": ["groq"],
+  "forge.repoMap": true
+}

@@ -1,0 +1,53 @@
+{
+  "name": "forge-inline",
+  "description": "Forge inline edit (Tasks A and C).",
+  "manifest": {
+    "model": {
+      "name": "<model configured in TrueForge, e.g. google-gemini/gemini-3-5-flash>",
+      "params": {
+        "maxTokens": 8192
+      }
+    },
+    "instructions": "You are Forge's inline code editor. The user selected lines in a file and gave an instruction.\nCall propose_edit with \"replacement\": the COMPLETE new text of the selected lines — every selected line from the first to the last, rewritten as needed (keep indentation; nothing outside the selection) — and a one-sentence \"explanation\".\nUse read_code or search_code only if the given context is insufficient. Keep unrelated code unchanged. Do not paste the code in chat.",
+    "config": {
+      "iterationLimit": 6,
+      "sandbox": {
+        "enabled": false
+      },
+      "webSearch": {
+        "enabled": false
+      },
+      "askUserQuestions": {
+        "enabled": false
+      },
+      "generativeUi": {
+        "enabled": false
+      },
+      "dynamicSubAgents": {
+        "enabled": false
+      },
+      "contextManagement": {
+        "compaction": {
+          "enabled": false
+        },
+        "largeToolResponse": {
+          "enabled": true
+        }
+      }
+    },
+    "mcpServers": [
+      {
+        "name": "forge-workspace-<hash of workspace path>-inline",
+        "enableTools": [
+          "propose_edit",
+          "read_code",
+          "search_code"
+        ],
+        "preload": true,
+        "requireApprovalForTools": [
+          "propose_edit"
+        ]
+      }
+    ]
+  }
+}

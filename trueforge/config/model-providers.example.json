@@ -1,0 +1,31 @@
+{
+  "_comment": "TrueForge model providers used to build and test Forge (all free tiers). Create them in the TrueForge UI (Settings → Models) or with the SDK: client.settings.modelProviders.create({ manifest }). Replace the placeholder keys locally; never commit real keys.",
+  "providers": [
+    {
+      "type": "google-gemini",
+      "auth": { "apiKey": "<GEMINI_API_KEY>" },
+      "models": [{ "name": "gemini-3-5-flash", "modelId": "gemini-3.5-flash" }, { "name": "gemma-4-31b-it", "modelId": "gemma-4-31b-it" }]
+    },
+    {
+      "type": "custom",
+      "name": "groq",
+      "baseUrl": "https://api.groq.com/openai/v1",
+      "auth": { "apiKey": "<GROQ_API_KEY>" },
+      "models": [{ "name": "qwen-3-8-27b", "modelId": "qwen/qwen3.8-27b", "properties": { "contextLength": 131042, "maxOutputTokens": 16384 } }]
+    },
+    {
+      "type": "custom",
+      "name": "openrouter",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "auth": { "apiKey": "<OPENROUTER_API_KEY>" },
+      "models": [{ "name": "openrouter-free", "modelId": "openrouter/free", "properties": { "contextLength": 128000, "maxOutputTokens": 4096 } }]
+    },
+    {
+      "_comment": "Task C only: an OpenAI-compatible endpoint nobody listens on, so every request fails with ECONNREFUSED.",
+      "type": "custom",
+      "name": "forge-demo-broken",
+      "baseUrl": "http://127.0.0.1:18791/v1",
+      "models": [{ "name": "unreachable", "modelId": "unreachable", "properties": { "contextLength": 32768 } }]
+    }
+  ]
+}
