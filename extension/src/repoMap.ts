@@ -4,10 +4,11 @@ import {createHash} from "node:crypto";
 import {mkdtempSync,mkdirSync,writeFileSync,rmSync,lstatSync,realpathSync,readFileSync} from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import {RepositoryContext} from "./taskBContext";
+/** Minimal repository surface RepoMap needs (implemented by agent/Workspace). */
+export interface RepoSource {root:string;files:string[];source(file:string):string;read(file:string,start:number|undefined,anchor:string|undefined,count:number,reason:string,charLimit?:number):string;maxReadLines:number}
 
 /** RepoMap is a read-only subprocess over an allowlisted private workspace mirror. */
-export function validateSymbolId(repo:RepositoryContext,id:string){
+export function validateSymbolId(repo:RepoSource,id:string){
   const match=/^([^\x00-\x1f:]+):(\d+)#([a-f0-9]{12})$/.exec(id);
   if(!match||!repo.files.includes(match[1]))throw Error("Use a tracked symbol_id returned by find_symbols (path:line#hash).");
   const line=Number(match[2]),text=repo.source(match[1]),source=text.split("\n");
@@ -23,7 +24,7 @@ export class RepoMapIndex {
   private queue:Promise<unknown>=Promise.resolve();
   private generation=0;
   private readonly maxResults:number;
-  constructor(private readonly repo:RepositoryContext,maxResults=5,private readonly maxChars=6000){this.maxResults=Math.max(1,Math.min(10,Number.isFinite(maxResults)?Math.floor(maxResults):5));}
+  constructor(private readonly repo:RepoSource,maxResults=5,private readonly maxChars=6000){this.maxResults=Math.max(1,Math.min(10,Number.isFinite(maxResults)?Math.floor(maxResults):5));}
   private binary(){
     const key:Record<string,string>={"darwin-arm64":"darwin-arm64","darwin-x64":"darwin-x64","linux-arm64":"linux-arm64-gnu","linux-x64":"linux-x64-gnu","win32-x64":"win32-x64-msvc"};
     const target=key[`${process.platform}-${process.arch}`];if(!target)throw Error("RepoMap is unavailable on this platform.");
