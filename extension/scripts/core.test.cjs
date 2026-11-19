@@ -263,3 +263,7 @@ test("committed dotenv fixtures reach command snapshots but never agent reads", 
   assert.ok(!ws.files.includes("tests/apps/.env"));
   assert.throws(() => ws.source("tests/apps/.env"));
 });
+
+test("'Request too large' is a size failure even when sent as 429", () => {
+  assert.equal(classifyFailure(new Error("Request failed (429): Request too large for model `qwen` on output tokens per minute (OTPM): Limit 1000")), "context_exceeded");
+});

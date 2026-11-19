@@ -40,6 +40,8 @@ export function retryAfterMs(error: unknown): number | undefined {
 export function classifyFailure(error: unknown): FailureKind | undefined {
   const message = messageOf(error), status = statusOf(error);
   if (/per[- ]day|daily|free-models-per-day|quota exceeded|insufficient[_ ]quota|exceeded your current quota/i.test(message)) return "quota";
+  // "Request too large" can arrive as 429, but waiting never helps: it is a size problem.
+  if (/request too large|too many tokens|maximum context|context length/i.test(message)) return "context_exceeded";
   if (status === 429 || /\brate limit|too many requests\b/i.test(message)) return "rate_limit";
   if (status === 401 || status === 403 || /invalid api key|unauthorized|authentication|invalid credentials|permission denied/i.test(message)) return "invalid_credentials";
   if (status === 413 || /context length|context window|maximum context|prompt is too long|request too large|too many tokens/i.test(message)) return "context_exceeded";

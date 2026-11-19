@@ -116,11 +116,14 @@ export class ForgeSidebar implements vscode.WebviewViewProvider, ReviewSurface, 
   }
 
   /** Test hook: accept every hunk of the pending review, as a user clicking "Accept all" would. */
-  acceptPendingReview(): boolean {
+  acceptPendingReview(onlyIfVerified = true): boolean {
     const p = this.pending;
     if (!p) return false;
+    const request = this.runs.find(r => r.id === p.runId)?.events.filter(e => e.type === "review.request").at(-1);
+    const verified = request?.type === "review.request" && request.verification && request.verification.exitCode === 0 && !request.verification.stale;
     this.pending = undefined;
-    p.resolve([...Array(p.count).keys()]);
+    // A careful reviewer rejects unverified or failing proposals.
+    p.resolve(onlyIfVerified && !verified ? undefined : [...Array(p.count).keys()]);
     this.postState();
     return true;
   }
