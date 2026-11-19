@@ -1,6 +1,14 @@
 # Competition-aligned verification matrix
 
-**Latest update — 19 November 2026:** Task B remains PARTIAL: the agent staged three files and invoked isolated verification, but its candidate failed one new test three times and never reached review. Task A’s earlier live result remains valid; Task C still needs its official live demonstration. Current automated results are 73 safety and 31 VS Code host tests. See [the live reliability report](17-task-b-reliability.md).
+**v2 update — 20 November 2026:** The extension was rewritten (see [report 21](21-harness-v2.md)). Live on free models through TrueForge: Task A passed in 2 model calls (1.4 s); Task C showed both automatic same-session fallback and a clear error, with a clean worktree. Task B produced a correct implementation and docs across 3 files, but its new test failed (58/59) and the run stopped before verification. Suites: 15 offline unit tests and 7 VS Code extension-host tests passed. The rows below describe v1 and are kept for history.
+
+**Recovery update — 19 November 2026:** A final-attempt passing Task B checkpoint can now resume only through fresh verification and approval. An integration test replayed the real saved candidate through the VS Code review, save and undo path in a disposable worktree. Final suites: 79 safety and 31 extension-host tests passed. The delayed buffer mismatch and a fresh live sidebar demonstration remain open; see [recovery report](20-task-b-recovery-and-readiness.md).
+
+
+**Latest update — 19 November 2026:** Task B produced a verified three-file proposal, but extension application hit a review-buffer guard and the explicitly approved hunks were applied directly. Task C was tested with a real isolated TrueForge provider failure: the error surfaced and the disposable worktree remained clean. The updated safety suite passed 78 tests and the VS Code extension-host suite passed 31 tests. See [Task B evidence](18-task-b-repair-guidance.md) and [Task C resilience](19-task-c-resilience.md). Remaining demo and review-buffer issues prevent a production-ready claim.
+
+
+**Earlier snapshot — 19 November 2026:** Task B remains PARTIAL: the agent staged three files and invoked isolated verification, but its candidate failed one new test three times and never reached review. Task A’s earlier live result remains valid; Task C still needs its official live demonstration. Current automated results are 73 safety and 31 VS Code host tests. See [the live reliability report](17-task-b-reliability.md).
 
 
 Status meanings: `READY`, `PARTIAL`, `NOT IMPLEMENTED`, `BLOCKED`, `NOT TESTED`. These are implementation-readiness statuses, not hypothetical earned marks.
@@ -42,7 +50,7 @@ The configured TrueForge agent produced a reviewed and approved patch. The offic
 
 The automated VS Code Extension Host run passed activation and command-registration checks. To verify the interactive debugger and notification visually:
 
-1. `code /Users/dakshjain/Desktop/Hackathons/iit-true-forge/extension`
+1. `code <repo>/extension`
 2. In Run and Debug, choose **Run Extension** and press F5.
 3. In the new host, open the Command Palette and run **Forge: Environment Status**.
 4. Confirm a notification shows `Forge extension loaded`, the workspace, active file, and `trueforge=reachable` if TrueForge is running.
