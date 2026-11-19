@@ -69,7 +69,7 @@ const LIMITS: Record<Role, number> = { implementation: 3, test: 2, docs: 2, conf
 const SHARE: Record<Role, number> = { implementation: 0.55, test: 0.25, docs: 0.15, config: 0.05 };
 const DEF_LINE = /^\s*(?:@|(?:async\s+)?def |class |(?:export\s+)?(?:async\s+)?function |(?:export\s+)?(?:const|let|interface|type|enum)\s|func |fn |pub fn )|^\s*[=\-~^]{3,}\s*$/;
 
-interface Candidate { path: string; role: Role; score: number; reasons: string[]; hits: { line: number; weight: number; terms: string[] }[] }
+interface Candidate { path: string; role: Role; score: number; reasons: string[]; hits: { line: number; weight: number; terms: string[] }[]; /** Graph, definition, naming or mention evidence (not just shared words). */ structural?: boolean }
 
 export async function assembleContext(ws: Workspace, request: string, opts: {
   budget: number; mentions?: Mentions; repomap?: RepoMapIndex; signal?: AbortSignal;
@@ -126,7 +126,7 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
     // A file that *defines* an identifier named in the request is the strongest signal.
     for (const ident of identifiers) {
       const def = (() => { try { return ws.outline(file).find(sym => sym.name.toLowerCase() === ident); } catch { return undefined; } })();
-      if (def) { c.score += 25; c.reasons.unshift(`defines ${def.name}`); byLine.set(def.line, { weight: 1000, terms: [ident] }); }
+      if (def) { c.score += 25; c.structural = true; c.reasons.unshift(`defines ${def.name}`); byLine.set(def.line, { weight: 1000, terms: [ident] }); }
     }
     // Lines where several query terms co-occur are strong evidence (e.g. a registration site).
     let proximity = 0;
@@ -161,9 +161,11 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
           const c = get(rel.siteFile);
           c.score += 2;
           c.reasons.push(`calls ${top.name} (static graph)`);
+          c.structural = true;
           if (rel.at) c.hits.push({ line: rel.at, weight: 20, terms: [top.name] });
         }
-        for (const test of ctx.tests.slice(0, 3)) { const c = get(test); c.score += 3; c.reasons.push(`RepoMap test for ${top.name}`); }
+        for (const test of ctx.tests.slice(0, 3)) { const c = get(test); c.score += 3; c.structural = true; c.reasons.push(`RepoMap test for ${top.name}`); }
+        get(top.file).structural = true;
         const node = (x: any, file?: string, line?: number): GraphNode => ({ name: x.name, kind: x.kind, file: file ?? x.file, line: line ?? x.line });
         graphInfo = {
           focus: node(top),
@@ -184,13 +186,13 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
     for (const c of ranked) {
       if (c.role === "implementation" || stem.length < 3) continue;
       const name = c.path.split("/").pop()!.toLowerCase();
-      if (name.includes(stem)) { c.score *= 1.8; c.reasons.push(`named after ${topImpl.path}`); }
+      if (name.includes(stem)) { c.score *= 1.8; c.structural = true; c.reasons.push(`named after ${topImpl.path}`); }
     }
   }
 
   // 5. Explicit mentions always win.
   const mentioned = new Set<string>();
-  for (const file of opts.mentions?.files ?? []) if (ws.has(file)) { const c = get(file); c.score += 1000; c.reasons.unshift("mentioned with @file"); mentioned.add(file); }
+  for (const file of opts.mentions?.files ?? []) if (ws.has(file)) { const c = get(file); c.score += 1000; c.structural = true; c.reasons.unshift("mentioned with @file"); mentioned.add(file); }
   for (const s of opts.mentions?.symbols ?? []) if (ws.has(s.path)) {
     const c = get(s.path); c.score += 1000; c.reasons.unshift(`mentioned @symbol ${s.name}`); c.hits.unshift({ line: s.line, weight: 1e6, terms: [s.name] }); mentioned.add(s.path);
   }
@@ -198,15 +200,17 @@ export async function assembleContext(ws: Workspace, request: string, opts: {
   // Selection: the best file of each wanted role first, then the strongest remaining ones.
   const sorted = [...candidates.values()].sort((a, b) => b.score - a.score);
   const tight = opts.budget < 4000;
-  const maxFiles = tight ? 3 : 7;
+  const maxFiles = tight ? 3 : 5;
   const roles: Role[] = ["implementation", ...(["test", "docs"] as Role[]).filter(r => wantRoles.has(r))];
   const selected: Candidate[] = sorted.filter(c => mentioned.has(c.path));
   for (const role of roles) { const best = sorted.find(c => c.role === role && !selected.includes(c)); if (best && best.score > 1.5) selected.push(best); }
+  // Beyond the best file per role, a file must earn its place structurally (graph neighbour,
+  // defines a named identifier, named after the module, or mentioned), not by shared words alone.
   for (const c of sorted) {
     if (selected.length >= maxFiles + mentioned.size) break;
     const best = sorted.find(x => x.role === c.role)?.score ?? 0;
     const sameRole = selected.filter(x => x.role === c.role).length;
-    if (!selected.includes(c) && sameRole < LIMITS[c.role] && c.score >= best * 0.45 && c.score > 1.5) selected.push(c);
+    if (!selected.includes(c) && c.structural && sameRole < LIMITS[c.role] && c.score >= best * 0.3) selected.push(c);
   }
   const files: PackFile[] = [];
   let used = 0;
