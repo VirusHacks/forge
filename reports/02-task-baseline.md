@@ -14,7 +14,7 @@
 
 | Check | Result |
 |---|---|
-| Local import | `/Users/dakshjain/Desktop/Hackathons/iit-true-forge/fixtures/flask-3.1.3/src/flask/__init__.py`, version `3.1.3` |
+| Local import | `<repo>/fixtures/flask-3.1.3/src/flask/__init__.py`, version `3.1.3` |
 | Flask CLI | Python 3.14.8 / Flask 3.1.3 / Werkzeug 3.1.5 |
 | `FLASK_DEBUG=off ... get_debug_flag()` | `True` on pristine baseline; expected Task A gap |
 | `pytest tests/test_cli.py -q` | `58 passed in 0.17s` |

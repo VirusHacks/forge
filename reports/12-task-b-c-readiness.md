@@ -30,7 +30,7 @@ In a local serialization measurement, the old two preloaded MCP schemas were 1,1
 2. Use a fresh clean linked worktree at Flask commit `22d924701a6ae2e4cd01e9a15bbaf3946094af65`. From the project root:
 
 ```sh
-FLASK_TASK_B_REPO='/Users/dakshjain/.codex/worktrees/flask-task-b-agent/flask-3.1.3' \
+FLASK_TASK_B_REPO='~/.codex/worktrees/flask-task-b-agent/flask-3.1.3' \
 TRUEFORGE_MODEL='google-gemini/gemini-3-5-flash-lite' \
 TRUEFORGE_FALLBACK_MODELS='openrouter/openrouter-free' \
 VSCODE_EXECUTABLE='/Applications/Visual Studio Code.app/Contents/MacOS/Code' \

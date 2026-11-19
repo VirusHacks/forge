@@ -9,7 +9,7 @@ Updated 19 November 2026 (India time), implementation-first checkpoint. This is 
 
 Task B tooling is implemented, but **a successful autonomous Task B proposal has not yet been observed**. The ranked live run `1795030843055.jsonl` selected the expected implementation, test, and docs files in one MCP call, then failed when Qwen omitted the required `path` in a later read. Its saved turn recorded 4 completed model messages, 9,730 input / 1,169 output tokens, one investigation and four reads, and one native compaction. A pathless follow-up read now resolves only to the last successfully read tracked file; the focused suite passes 15/15. A subsequent run failed on its first response because Qwen called the hyphenated `investigate-repository` name; that exact alias is now registered and covered by the focused MCP suite. The run `1795031069253.jsonl` selected the expected files but Qwen repeated top-of-file reads and then hit HTTP 429 (18,886 input / 456 output tokens). The retriever now includes generic symbol navigation, and repeated top-of-file reads jump to the highest ranked related symbol; this selected the CLI command registration section at line 594 in a measured local check. Empty follow-up reads continue from the last delivered line, and a pathless first read after investigation defaults to its top ranked tracked implementation file. MCP error responses now obey the same pacing as successful responses. The run `1795031613913.jsonl` reached the CLI registration code, but native compaction generated 1,533 output tokens and the next request was rejected by Groq's 1,000 output-token/minute limit. Its saved turn recorded 5 model messages, 13,435 input / 1,837 output tokens, one investigation and three reads. No candidate was reached. The agent now has `maxTokens: 800`, native compaction disabled for this constrained model, and a `stage_edit` MCP tool for one hunk at a time. `validate_edits` assembles the staged candidate, blocks an unchanged failed candidate, and permits a bounded one-hunk repair. This is a measured compatibility adjustment, not a successful Task B run.
 
-The disposable target is `/Users/dakshjain/.codex/worktrees/flask-task-b-agent/flask-3.1.3` at `22d924701a6ae2e4cd01e9a15bbaf3946094af65`. Its source and index were clean at the last check. The project workspace is `/Users/dakshjain/Desktop/Hackathons/iit-true-forge`.
+The disposable target is `~/.codex/worktrees/flask-task-b-agent/flask-3.1.3` at `22d924701a6ae2e4cd01e9a15bbaf3946094af65`. Its source and index were clean at the last check. The project workspace is `<repo>`.
 
 ## Working implementation
 
@@ -56,7 +56,7 @@ From the project root:
 ```sh
 npm --prefix extension run test:safety
 VSCODE_EXECUTABLE='/Applications/Visual Studio Code.app/Contents/MacOS/Code' npm --prefix extension test
-TRUEFORGE_MODEL='<configured-primary>' TRUEFORGE_FALLBACK_MODELS='<fallback-1>,<fallback-2>' FLASK_TASK_B_REPO='/Users/dakshjain/.codex/worktrees/flask-task-b-agent/flask-3.1.3' VSCODE_EXECUTABLE='/Applications/Visual Studio Code.app/Contents/MacOS/Code' FORGE_PACE_MS=65000 FORGE_CONTEXT_BUDGET=3000 npm --prefix extension run task-b:live
+TRUEFORGE_MODEL='<configured-primary>' TRUEFORGE_FALLBACK_MODELS='<fallback-1>,<fallback-2>' FLASK_TASK_B_REPO='~/.codex/worktrees/flask-task-b-agent/flask-3.1.3' VSCODE_EXECUTABLE='/Applications/Visual Studio Code.app/Contents/MacOS/Code' FORGE_PACE_MS=65000 FORGE_CONTEXT_BUDGET=3000 npm --prefix extension run task-b:live
 node extension/scripts/task-b-trace.mjs SESSION_ID
 ```
 
@@ -68,7 +68,7 @@ pytest tests/test_cli.py -q
 flask --help
 ```
 
-For the factory/instance and redaction probes, use the isolated `scripts/task-b-check.py` via the extension's `validateTaskB` path; it supplies trusted test apps and masks secrets without writing into the worktree. Check `git -C /Users/dakshjain/Desktop/Hackathons/iit-true-forge/fixtures/flask-3.1.3 status --porcelain` for the pristine fixture.
+For the factory/instance and redaction probes, use the isolated `scripts/task-b-check.py` via the extension's `validateTaskB` path; it supplies trusted test apps and masks secrets without writing into the worktree. Check `git -C <repo>/fixtures/flask-3.1.3 status --porcelain` for the pristine fixture.
 
 ## Sprint checkpoint — 19 November 2026
 

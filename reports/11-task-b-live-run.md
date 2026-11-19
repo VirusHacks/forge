@@ -10,7 +10,7 @@ The agent received the exact official Task B request, without file paths:
 
 TrueForge was initially stopped. The existing local 0.185.1 runtime was started with the localhost MCP allowlist. Configured models were `groq/gpt-oss-20b`, `groq/llama-3-3-70b-versatile`, and `groq/qwen-3-8-27b`; no OpenRouter model was configured. The run used Qwen alone, with deferred tools, compaction off and a 2,500-token repository budget. The extension compiled successfully before launching.
 
-The target was `/Users/dakshjain/.codex/worktrees/flask-task-b-agent/flask-3.1.3`, clean at `22d924701a6ae2e4cd01e9a15bbaf3946094af65` before and after the run. The pristine fixture was also clean afterward.
+The target was `~/.codex/worktrees/flask-task-b-agent/flask-3.1.3`, clean at `22d924701a6ae2e4cd01e9a15bbaf3946094af65` before and after the run. The pristine fixture was also clean afterward.
 
 ## Observed sequence
 

@@ -1,6 +1,6 @@
 # Environment audit
 
-Audit date: 2026-11-18 (Asia/Calcutta). Workspace: `/Users/dakshjain/Desktop/Hackathons/iit-true-forge`.
+Audit date: 2026-11-18 (Asia/Calcutta). Workspace: `<repo>`.
 
 The target directory was empty at the start of Phase 0. It was not an existing Git repository, and `git init` was blocked by the desktop sandbox's read-only treatment of the root `.git` path. The isolated Flask fixture and scratch copies are separate Git repositories and remain usable.
 

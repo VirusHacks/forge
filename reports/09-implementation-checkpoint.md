@@ -1,7 +1,7 @@
 # Forge implementation checkpoint
 
 **Updated:** 19 November 2026 (Asia/Kolkata)  
-**Workspace:** `/Users/dakshjain/Desktop/Hackathons/iit-true-forge`  
+**Workspace:** `<repo>`  
 **Pinned Flask revision:** `22d924701a6ae2e4cd01e9a15bbaf3946094af65`
 
 ## Objective and constraints
