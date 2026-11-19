@@ -27,6 +27,27 @@ export function renderHunks(source:string, hunks:Hunk[]):string {
   return result;
 }
 
+/** Accept an exact anchor only when every byte was delivered in unambiguous source excerpts. */
+export function isObservedAnchor(source:string,blocks:string[],original:string):boolean {
+  if(!original)return false;
+  if(blocks.some(block=>block.includes(original)))return true;
+  const start=source.indexOf(original);
+  if(start<0||source.indexOf(original,start+1)>=0)return false;
+  const intervals=blocks.flatMap(block=>{
+    if(!block)return [];
+    const at=source.indexOf(block);
+    return at>=0&&source.indexOf(block,at+1)<0?[{start:at,end:at+block.length}]:[];
+  }).sort((a,b)=>a.start-b.start);
+  let covered=start;
+  for(const interval of intervals){
+    if(interval.end<=covered)continue;
+    if(interval.start>covered)break;
+    covered=Math.max(covered,interval.end);
+    if(covered>=start+original.length)return true;
+  }
+  return false;
+}
+
 export class RepositoryContext {
   readonly root:string;
   readonly files:string[];
@@ -266,7 +287,8 @@ export class RepositoryContext {
         const navigation=sourceLines.flatMap((line,index)=>{
           const lower=line.toLowerCase();
           const matched=[...focusTerms].filter(term=>lower.includes(term));
-          if(!matched.length||!/^\s*(?:@|def |async def |class |function |export |.*\b(?:add|register|attach)_[a-z]+\b)/i.test(line))return [];
+          const heading=kind==="documentation"&&/^\s*[=\-~^`"+*#]{3,}\s*$/.test(sourceLines[index+1]??"");
+          if(!matched.length||!heading&&!/^\s*(?:@|def |async def |class |function |export |.*\b(?:add|register|attach)_[a-z]+\b)/i.test(line))return [];
           return [{line:index+1,text:line.trim().slice(0,100),priority:matched.length*2+(/\b(?:add|register|attach)_[a-z]+\b/i.test(line)?4:0)+(/^\s*@/.test(line)?2:0)}];
         }).sort((a,b)=>b.priority-a.priority||a.line-b.line).slice(0,6);
         if(kind==="implementation"&&navigation.length)this.investigationAnchors.set(file,navigation.map(item=>item.line).sort((a,b)=>a-b));

@@ -1,5 +1,8 @@
 # TrueForge Task B working state
 
+**Latest update — 19 November 2026:** A real TrueForge run staged a three-file Task B proposal, but three isolated verifications failed the same new test; no review or write occurred. The final safety suite passed 73 tests and the VS Code host suite passed 31. The old 24-iteration default is now TrueForge’s supported maximum of 1,024. See [the current reliability report](17-task-b-reliability.md) for actual model usage, failures, checkpoints and limitations.
+
+
 Updated 19 November 2026 (India time), implementation-first checkpoint. This is the continuation checkpoint for Phase 2. The Task A result is recorded in `reports/06-task-a-vertical-slice.md` and remains the baseline.
 
 ## Current status

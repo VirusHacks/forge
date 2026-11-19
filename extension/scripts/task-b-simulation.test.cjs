@@ -38,10 +38,10 @@ test('scripted offline model stages reference hunks, validates and reaches gated
  try{
   const found=await call('investigate_repository',{goal:'Add a built-in CLI command that prints configuration as JSON, with sensitive values masked, with tests and documentation.'});
   assert.ok(found.implementation.length&&found.test.length&&found.documentation.length);
-  for(const h of hunks){const lines=h.original.split('\n').length;assert.ok(lines<=40);await call('read_file',{path:h.path,start:h.start,lines,reason:'Read exact reference anchor for simulation'});const {start,...staged}=h;await call('stage_edit',staged);}
-  assert.equal(new Set(t.staged.map(h=>h.path)).size,3);const failure=await call('validate_edits');assert.equal(failure.ok,false);assert.match(failure.summary,/test failure/);assert.ok(failure.summary.length<=1600);
-  const h=hunks[0];await call('stage_edit',{path:h.path,original:h.original,replacement:h.replacement+'\n'});
-  const pass=await call('validate_edits');assert.equal(pass.ok,true,pass.summary);assert.ok(pass.digest);assert.equal(t.snapshot().currentStage,'review');
+  for(const h of hunks){const lines=h.original.split('\n').length;assert.ok(lines<=40);await call('read_file',{path:h.path,start:h.start,lines,reason:'Read exact reference anchor for simulation'});}await call('stage_patch',{edits:hunks.map(({start,...h})=>h)});
+  assert.equal(new Set(t.staged.map(h=>h.path)).size,3);const failure=await call('verify_patch');assert.equal(failure.ok,false);assert.match(failure.summary,/test failure/);assert.ok(failure.summary.length<=1600);
+  const h=hunks[0];await call('stage_patch',{edits:[{path:h.path,original:h.original,replacement:h.replacement+'\n'}]});
+  const pass=await call('verify_patch');assert.equal(pass.ok,true,pass.summary);assert.ok(pass.digest);assert.equal(t.snapshot().currentStage,'review');
   const denied=await client.callTool({name:'submit_review',arguments:{digest:pass.digest}});assert.equal(denied.isError,true);
   assert.equal(execFileSync('git',['-C',root,'status','--porcelain'],{encoding:'utf8'}),before);
   t.sealed=true;t.approved=true;assert.match(await call('submit_review',{digest:pass.digest}),/acknowledged/);

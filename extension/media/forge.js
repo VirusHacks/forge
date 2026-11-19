@@ -19,7 +19,7 @@
   const run=()=>state.runs.find(r=>r.id===state.current);
   function eventText(e){
     switch(e.type){
-      case 'tool.start':return ({investigate_repository:'Finding relevant files',search_repository:'Searching the repository',search_directory:'Exploring folders',read_file:'Reading source',stage_edit:'Preparing an edit',validate_edits:'Running checks',submit_review:'Preparing your review',get_run_state:'Restoring task context',find_symbols:'Finding symbols',get_symbol_context:'Reading symbol context',trace_symbol:'Tracing related code'})[e.name]||`Using ${e.name}`;
+      case 'tool.start':return ({investigate_repository:'Finding relevant files',search_repository:'Searching the repository',search_directory:'Exploring folders',read_file:'Reading source',stage_edit:'Preparing an edit',stage_patch:'Preparing changes',validate_edits:'Running checks',verify_patch:'Running checks',submit_review:'Preparing your review',get_run_state:'Restoring task context',find_symbols:'Finding symbols',get_symbol_context:'Reading symbol context',trace_symbol:'Tracing related code'})[e.name]||`Using ${e.name}`;
       case 'search.fallback':return 'Using local search';
       case 'context.symbol_search':return 'Symbols: '+(e.results||[]).map(x=>`${x.name} · ${x.file}:${x.line}`).join(' | ');
       case 'context.investigation':{const groups=e.selected||{};const items=Object.values(groups).flat();return items.length?'Selected: '+items.map(x=>`${x.path}${x.reason?' · '+x.reason:''}`).join(' | '):'Selected relevant files';}
@@ -29,7 +29,7 @@
       case 'model.fallback':return `Switching to ${e.to||'another model'}${e.kind?' · '+String(e.kind).replace(/_/g,' '):''}`;
       case 'model.retry':return 'Retrying the model';
       case 'model.skip':return `Skipped ${e.model}`;
-      case 'stage':return `Proposed a change in ${e.path}`;
+      case 'stage':return `Proposed changes in ${Array.isArray(e.paths)?e.paths.join(', '):e.path||'the workspace'}`;
       case 'usage.completed':return `${e.input??0} input · ${e.output??0} output tokens`;
       case 'session':return `Session ${e.session}`;
       case 'tool.error':return `Tool stopped: ${e.message||e.name}`;

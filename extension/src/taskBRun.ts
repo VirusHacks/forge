@@ -57,7 +57,7 @@ export async function runTaskB(opts:{root:string;model:string;baseUrl:string;bud
     log({type:"context.request_budget",...policy,initialEstimatedTokens:initial,schemaEstimatedTokens:schemaTokens,harnessReserveTokens:1200,preloaded:preloaded.map(t=>t.name),estimateOnly:true});
     await c.agents.create({name:agent,description:"Repository discovery, isolated verification and human review",manifest:{model:{name:opts.model,params:{maxTokens:policy.maxOutputTokens,temperature:0}},
       instructions,
-      config:{iterationLimit:opts.iterationLimit??24,sandbox:{enabled:false},webSearch:{enabled:false},askUserQuestions:{enabled:false},generativeUi:{enabled:false},dynamicSubAgents:{enabled:false},
+      config:{iterationLimit:opts.iterationLimit??1024,sandbox:{enabled:false},webSearch:{enabled:false},askUserQuestions:{enabled:false},generativeUi:{enabled:false},dynamicSubAgents:{enabled:false},
         contextManagement:{compaction:{enabled:opts.compactionEnabled??false,trigger:{type:"input_tokens",value:policy.compactionTrigger}},largeToolResponse:{enabled:false}}},
       mcpServers:[{name:connector,enableTools:toolNames,...(opts.deferredTools===false?{preload:true}:{preload:false,preloadTools:essentialTools}),requireApprovalForTools:["submit_review"]}]}});
     session=(await c.sessions.create({agent:{name:agent}})).data.id;

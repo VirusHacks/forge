@@ -1,5 +1,8 @@
 # Competition-aligned verification matrix
 
+**Latest update — 19 November 2026:** Task B remains PARTIAL: the agent staged three files and invoked isolated verification, but its candidate failed one new test three times and never reached review. Task A’s earlier live result remains valid; Task C still needs its official live demonstration. Current automated results are 73 safety and 31 VS Code host tests. See [the live reliability report](17-task-b-reliability.md).
+
+
 Status meanings: `READY`, `PARTIAL`, `NOT IMPLEMENTED`, `BLOCKED`, `NOT TESTED`. These are implementation-readiness statuses, not hypothetical earned marks.
 
 | Criterion | Max | Current status | Tested? | Evidence | Remaining live proof | Highest-scoring anchor to demonstrate |

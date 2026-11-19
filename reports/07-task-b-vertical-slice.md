@@ -1,5 +1,8 @@
 # TrueForge Task B vertical slice
 
+**Latest update — 19 November 2026:** A later live TrueForge session staged five hunks in three files and ran the isolated verifier, but the candidate failed the same test on all three verification attempts. No human review or workspace write occurred. See [the detailed reliability report](17-task-b-reliability.md).
+
+
 ## Current result
 
 The latest integrated run (19 November, 12:32 IST) found all three relevant files and exercised deferred tool discovery, then hit Groq's input-token-per-minute quota before staging edits. It completed three model responses using 7,262 input and 292 output tokens, with no retry or fallback. See [the complete run report](11-task-b-live-run.md). No autonomous Task B candidate or approved edit has been observed. The disposable pinned Flask worktree remains clean at `22d924701a6ae2e4cd01e9a15bbaf3946094af65`.
