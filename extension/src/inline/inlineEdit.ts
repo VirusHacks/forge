@@ -33,7 +33,7 @@ export interface InlineRequest {
 export function buildInlineSpec(model: string, connector: string, s: AgentSettings) {
   const p = profileFor(model, s, s.tightBudgetProviders);
   return {
-    model: { name: model, params: { maxTokens: Math.max(2048, Math.min(p.maxOutputTokens, 8192)) } },
+    model: { name: model, params: { maxTokens: p.name === "tight" ? p.maxOutputTokens : Math.max(2048, Math.min(p.maxOutputTokens, 8192)) } },
     instructions: INLINE_INSTRUCTIONS,
     config: {
       iterationLimit: 6, sandbox: { enabled: false }, webSearch: { enabled: false }, askUserQuestions: { enabled: false },
@@ -133,7 +133,7 @@ export async function runInlineEdit(request: InlineRequest): Promise<{ status: "
     await upsertAgent(r.client, INLINE_AGENT, "Forge inline edit: selection + instruction → approval-gated propose_edit → per-hunk diff.", spec(router.current), r.signal);
     const result = await runSession({
       client: r.client, baseUrl: r.baseUrl, agentName: INLINE_AGENT, buildSpec: spec, router, title: `Inline: ${r.instruction}`,
-      input: inlinePrompt(r), signal: r.signal, emit: r.emit, maxModelCalls: 6,
+      input: inlinePrompt(r), signal: r.signal, emit: r.emit, maxModelCalls: 6, ownTools: INLINE_TOOLS,
       continuation: "Continue: call propose_edit with the replacement for the selected lines.",
       onApproval: async request => {
         if (request.toolName !== "propose_edit" || typeof request.arguments.replacement !== "string") return { allow: false, reason: "Call propose_edit with a replacement string." };

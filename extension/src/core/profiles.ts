@@ -8,8 +8,8 @@ import { providerOf } from "./router";
  */
 export interface BudgetProfile { name: "tight" | "standard"; contextBudget: number; maxResultChars: number; compactAt: number; maxOutputTokens: number }
 
-const TIGHT: BudgetProfile = { name: "tight", contextBudget: 2200, maxResultChars: 5000, compactAt: 5200, maxOutputTokens: 3000 };
-const STANDARD: BudgetProfile = { name: "standard", contextBudget: 7000, maxResultChars: 14000, compactAt: 40000, maxOutputTokens: 8192 };
+const TIGHT: BudgetProfile = { name: "tight", contextBudget: 2200, maxResultChars: 5000, compactAt: 5200, maxOutputTokens: 1000 };
+const STANDARD: BudgetProfile = { name: "standard", contextBudget: 7000, maxResultChars: 14000, compactAt: 18000, maxOutputTokens: 8192 };
 
 export function profileFor(model: string, overrides: Partial<Record<keyof Omit<BudgetProfile, "name">, number>>, tightProviders: string[]): BudgetProfile {
   const base = tightProviders.includes(providerOf(model)) ? TIGHT : STANDARD;

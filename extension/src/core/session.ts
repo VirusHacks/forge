@@ -27,6 +27,8 @@ export interface SessionRunOptions {
   emit: (event: UiEvent) => void;
   onApproval?: (request: ApprovalRequest) => Promise<ApprovalDecision>;
   maxModelCalls?: number;
+  /** Forge's own MCP tool names; any other tool call is a TrueForge harness action and is surfaced. */
+  ownTools?: string[];
   /** Text sent when a turn is continued after a provider failure. */
   continuation?: string;
   wait?: (ms: number, signal: AbortSignal) => Promise<void>;
@@ -105,6 +107,7 @@ export async function runSession(o: SessionRunOptions): Promise<SessionRunResult
       { abortSignal: o.signal, timeoutInSeconds: 900, maxRetries: 0 } as any,
     );
     let text = "", turnId: string | undefined, finishing = false, stopRequested = false;
+    const systemCalls = new Map<string, number>();
     const seen = new Set<string>();
     for await (const e of stream as AsyncIterable<any>) {
       o.signal.throwIfAborted();
@@ -137,7 +140,17 @@ export async function runSession(o: SessionRunOptions): Promise<SessionRunResult
         case "model.message.delta": {
           if (e.reasoningContent) o.emit({ type: "reasoning.delta", text: e.reasoningContent });
           if (e.content) { text += e.content; o.emit({ type: "assistant.delta", text: e.content }); }
-          if (e.toolCalls?.length) toolActivity++;
+          if (e.toolCalls?.length) {
+            toolActivity++;
+            // Surface TrueForge's own harness tools (e.g. list_tools = deferred tool loading).
+            for (const tc of e.toolCalls) {
+              const name = tc.function?.name;
+              if (!tc.id || !name || systemCalls.has(tc.id)) continue;
+              if (tc.toolInfo?.type !== "truefoundry-system" && (!o.ownTools || o.ownTools.includes(name))) continue;
+              systemCalls.set(tc.id, Date.now());
+              o.emit({ type: "tool.start", id: `tf-${tc.id}`, name, title: `TrueForge ${HARNESS_TITLES[name] ?? name}` });
+            }
+          }
           if (e.usage) {
             completed++;
             inputTokens += e.usage.inputTokens ?? 0;
@@ -147,9 +160,15 @@ export async function runSession(o: SessionRunOptions): Promise<SessionRunResult
           }
           break;
         }
-        case "tool.response":
+        case "tool.response": {
           toolActivity++;
+          const started = systemCalls.get(e.toolCallId);
+          if (started !== undefined) {
+            systemCalls.delete(e.toolCallId);
+            o.emit({ type: "tool.end", id: `tf-${e.toolCallId}`, ok: true, ms: Date.now() - started, summary: harnessSummary(String(e.content ?? "")), preview: String(e.content ?? "").slice(0, 1500) });
+          }
           break;
+        }
         case "thread.context_compaction_started":
           o.emit({ type: "compaction", phase: "started" });
           break;
@@ -201,6 +220,13 @@ export async function runSession(o: SessionRunOptions): Promise<SessionRunResult
     }
     return { toolName: name, toolCallId: ref.id, arguments: args };
   }
+}
+
+const HARNESS_TITLES: Record<string, string> = { list_tools: "list_tools · deferred tool loading" };
+
+function harnessSummary(content: string) {
+  const names = [...content.matchAll(/"name"\s*:\s*"([^"]+)"/g)].map(m => m[1]);
+  return names.length ? `${names.length} tools available: ${[...new Set(names)].slice(0, 6).join(", ")}` : content.split("\n", 1)[0].slice(0, 140) || "done";
 }
 
 function safeJson(text: string): Record<string, unknown> {

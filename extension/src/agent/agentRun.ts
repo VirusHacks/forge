@@ -121,7 +121,7 @@ export async function runAgent(o: AgentRunOptions): Promise<{ status: "complete"
 
     const result = await runSession({
       client: o.client, baseUrl: o.baseUrl, agentName: AGENT_NAME, buildSpec: spec, router, title: o.request, input,
-      signal: o.signal, emit, maxModelCalls: o.settings.maxModelCalls,
+      signal: o.signal, emit, maxModelCalls: o.settings.maxModelCalls, ownTools: AGENT_TOOLS,
       continuation: "Continue the task from where you stopped. Staged edits are preserved; call view_staged if unsure.",
       onApproval: async request => {
         if (request.toolName !== "submit_for_review") return { allow: false, reason: `Approval is only expected for submit_for_review, not ${request.toolName}.` };
@@ -148,7 +148,12 @@ export async function runAgent(o: AgentRunOptions): Promise<{ status: "complete"
     // The model failed, but finished work is not lost: offer the staged changes for review.
     if (!reviewed && tools && !tools.staging.isEmpty) {
       emit({ type: "notice", level: "warning", message: `Run stopped: ${message}` });
-      const outcome = await reviewStaged(undefined, `The run stopped early (${message.slice(0, 160)}). You can still review the staged changes.`).catch(() => undefined);
+      // Tell the reviewer what the agent did not get to, so partial work is judged honestly.
+      const staged = tools.staging.paths, missing: string[] = [];
+      if (wants.has("test") && !staged.some(p => roleOf(p) === "test")) missing.push("tests");
+      if (wants.has("docs") && !staged.some(p => roleOf(p) === "docs")) missing.push("documentation");
+      const gap = missing.length ? ` The request asked for ${missing.join(" and ")}, which are not staged yet.` : "";
+      const outcome = await reviewStaged(undefined, `The run stopped early (${message.slice(0, 160)}). You can still review the staged changes.${gap}`).catch(() => undefined);
       if (outcome?.applied) return { status: "complete", message: `Applied ${outcome.selected.length} hunk(s) after the run stopped.` };
     }
     return { status: "error", message };
