@@ -72,6 +72,8 @@ OUTBOUND_URL_ALLOWED_HOSTS='["localhost","127.0.0.1"]' MODEL_HTTP_MAX_RETRIES=0 
 
 Forge registers its agent definitions ([trueforge/agents/](trueforge/agents)) in TrueForge automatically on first use.
 
+**Prebuilt extension (skip step 1 and F5):** download `forge-0.2.0.vsix` from the [latest release](https://github.com/VirusHacks/forge/releases/latest) and install it with `code --install-extension forge-0.2.0.vsix` (or *Extensions → … → Install from VSIX*). You still need TrueForge running (steps 2–3). The bundled RepoMap code-graph binary is for macOS on Apple silicon; on other platforms Forge falls back to text ranking automatically. Tip: set `"diffEditor.codeLens": true` to see the ✓ Accept / ✕ Reject buttons inside diffs.
+
 ### Using Forge
 
 - **Inline edit:** select code, press **⌘⌥K** (Ctrl+Alt+K on Windows/Linux), and type what you want. A diff opens with **✓ Accept / ✕ Reject above every hunk** (⌘⌥Y / ⌘⌥N); the Forge sidebar shows the same choices.

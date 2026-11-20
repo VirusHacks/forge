@@ -1,0 +1,11 @@
+# Ship only the compiled extension, its webview assets and production dependencies.
+src/**
+test/**
+scripts/**
+.vscode-test/**
+**/*.map
+**/*.ts
+tsconfig.json
+*.vsix
+.vscode/**
+.vscode-test.mjs
