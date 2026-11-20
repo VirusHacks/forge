@@ -1,0 +1,11 @@
+# Large or regenerable production artefacts (raw frames, cut clips, renders, caches)
+recordings/
+composition/assets/clips/*.mp4
+composition/.hyperframes/
+composition/node_modules/
+assets/snap*/
+final/*.mp4
+final/*.log
+
+# Audio is regenerable (narration text in audio/**/*.txt, music via FFmpeg); keep the repo lean
+**/*.wav

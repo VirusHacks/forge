@@ -1,0 +1,1 @@
+Task C: resilience. The selected model points at an endpoint that refuses connections, as curl confirms. A second model is configured as the fallback. I repeat Task A.

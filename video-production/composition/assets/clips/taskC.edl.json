@@ -1,0 +1,68 @@
+{
+ "segments": [
+  {
+   "edited_start": 0.0,
+   "edited_end": 7.188,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 2.5,
+   "rec_end": 14.0,
+   "speed": 1.6,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 7.188,
+   "edited_end": 9.963,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 20.2,
+   "rec_end": 31.3,
+   "speed": 4.0,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 9.963,
+   "edited_end": 25.163,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 31.3,
+   "rec_end": 46.5,
+   "speed": 1,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 25.163,
+   "edited_end": 26.663,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 46.5,
+   "rec_end": 48.0,
+   "speed": 1,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 26.663,
+   "edited_end": 28.363,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 48.0,
+   "rec_end": 54.8,
+   "speed": 4,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 28.363,
+   "edited_end": 30.613,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 54.8,
+   "rec_end": 58.4,
+   "speed": 1.6,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 30.613,
+   "edited_end": 34.213,
+   "source": "../recordings/task-c-take1/raw.mp4",
+   "rec_start": 58.4,
+   "rec_end": 62.0,
+   "speed": 1,
+   "hold_s": 0
+  }
+ ],
+ "duration": 34.213
+}

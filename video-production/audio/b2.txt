@@ -1,0 +1,1 @@
+From here, the run is sped up. True Forge drives the loop: the agent searches, reads and stages edits through M C P tools. Forge tests every stage in a sandboxed copy, and when a free model hits its quota, it falls back to the next one, in the same session.

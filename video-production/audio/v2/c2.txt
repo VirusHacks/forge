@@ -1,0 +1,1 @@
+Forge's router retries with backoff, two seconds, then four, while I keep scrolling. Then it switches models automatically, in the same session, and the diff arrives.

@@ -1,0 +1,1 @@
+Git shows exactly three changed files, and one click on Undo restores them all.

@@ -1,0 +1,1 @@
+Here's the split. True Forge runs the agent loop: sessions, model calls, tool calls, approvals and compaction. Forge adds what a coding agent needs on top: a context pack before the first model call, editor tools over M C P, edits staged in memory and tested in a sandbox, a review that writes only what I approve, and automatic model fallback.

@@ -1,0 +1,51 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; pointer-events: none; font-family: Inter, sans-serif; }
+    .ovc-chip { position: absolute; left: 1290px; top: 112px; padding: 14px 22px; border-radius: 14px; background: #0b0f16ee; border: 1.5px solid #f85149; color: #e6edf3; font-size: 26px; font-weight: 700; }
+    .ovc-chip span { display: block; font-size: 22px; font-weight: 400; color: #9da7b3; margin-top: 4px; font-family: "JetBrains Mono", monospace; }
+    .ovc-box { position: absolute; border: 3px solid #e3b341; border-radius: 12px; box-shadow: 0 0 26px #e3b34166; }
+    .ovc-tag { position: absolute; padding: 8px 14px; border-radius: 10px; font-size: 25px; font-weight: 700; color: #0b0f16; background: #e3b341; white-space: nowrap; }
+    .red { border-color: #f85149 !important; box-shadow: 0 0 26px #f8514966 !important; }
+    .tag-red { background: #f85149; color: #fff; }
+    .green { border-color: #3fb950 !important; box-shadow: 0 0 26px #3fb95066 !important; }
+    .tag-green { background: #3fb950; }
+    .blue { border-color: #4c8dff !important; box-shadow: 0 0 26px #4c8dff66 !important; }
+    .tag-blue { background: #4c8dff; color: #fff; }
+  </style>
+  <div id="root" data-composition-id="ovC" data-width="1920" data-height="1080">
+    <div id="ovc-chip" class="ovc-chip clip" data-start="0.20" data-duration="4.60">TASK C · Resilience<span>broken model endpoint · repeat Task A</span></div>
+
+    <div id="ovc-cfg" class="clip" data-start="0.80" data-duration="3.26">
+      <div class="ovc-box blue" style="left:728px; top:204px; width:790px; height:36px;"></div>
+      <div class="ovc-tag tag-blue" style="left:740px; top:250px;">second configured model = automatic fallback</div>
+    </div>
+    <div id="ovc-curl" class="clip" data-start="5.31" data-duration="1.88">
+      <div class="ovc-box red" style="left:636px; top:814px; width:740px; height:30px;"></div>
+      <div class="ovc-tag tag-red" style="left:640px; top:762px;">selected model's endpoint: connection refused</div>
+    </div>
+
+    <div id="ovc-retry" class="clip" data-start="12.06" data-duration="6.10">
+      <div class="ovc-box" style="left:80px; top:196px; width:516px; height:76px;"></div>
+      <div class="ovc-tag" style="left:620px; top:212px;">retry with backoff: 2 s, then 4 s</div>
+    </div>
+    <div id="ovc-switch" class="clip" data-start="18.26" data-duration="6.90">
+      <div class="ovc-box green" style="left:80px; top:278px; width:516px; height:54px;"></div>
+      <div class="ovc-tag tag-green" style="left:620px; top:282px;">automatic fallback · same TrueForge session</div>
+      <div class="ovc-box green" style="left:1306px; top:860px; width:604px; height:42px;"></div>
+    </div>
+
+    <!-- After terminal zoom (scale 1.8 around 900,840) -->
+    <div id="ovc-clean" class="clip" data-start="32.21" data-duration="2.00">
+      <div class="ovc-box green" style="left:626px; top:494px; width:510px; height:84px;"></div>
+      <div class="ovc-tag tag-green" style="left:520px; top:820px; font-size:30px;">git status: empty · git diff: exit 0 → workspace unchanged</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const pop = (sel, at) => tl.fromTo(`${sel} > *`, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", stagger: 0.08 }, at);
+    tl.fromTo("#ovc-chip", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.20);
+    pop("#ovc-cfg", 0.80); pop("#ovc-curl", 5.31); pop("#ovc-retry", 12.06); pop("#ovc-switch", 18.26); pop("#ovc-clean", 32.21);
+    tl.to({}, { duration: 0.1 }, 34.11);
+    window.__timelines["ovC"] = tl;
+  </script>
+</template>

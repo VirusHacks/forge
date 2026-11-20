@@ -1,0 +1,1 @@
+Forge is a coding agent inside V S Code. It finds the right code, edits several files, and shows every change for review before it touches disk. True Forge runs the agent loop.

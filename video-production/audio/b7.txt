@@ -1,0 +1,1 @@
+Flask help now lists config, and flask config prints the configuration as JSON, masking passwords, tokens and keys.

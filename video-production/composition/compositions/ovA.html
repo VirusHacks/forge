@@ -1,0 +1,52 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; pointer-events: none; font-family: Inter, sans-serif; }
+    .ova-chip { position: absolute; left: 1290px; top: 112px; padding: 14px 22px; border-radius: 14px; background: #0b0f16ee; border: 1.5px solid #4c8dff; color: #e6edf3; font-size: 26px; font-weight: 700; }
+    .ova-chip span { display: block; font-size: 22px; font-weight: 400; color: #9da7b3; margin-top: 4px; font-family: "JetBrains Mono", monospace; }
+    .ova-box { position: absolute; border: 3px solid #3fb950; border-radius: 12px; box-shadow: 0 0 0 4000px #00000000, 0 0 26px #3fb95066; }
+    .ova-tag { position: absolute; padding: 8px 14px; border-radius: 10px; font-size: 25px; font-weight: 700; color: #0b0f16; background: #3fb950; white-space: nowrap; }
+    .amber { border-color: #e3b341 !important; box-shadow: 0 0 26px #e3b34166 !important; }
+    .tag-amber { background: #e3b341; }
+    .tag-blue { background: #4c8dff; color: #fff; }
+  </style>
+  <div id="root" data-composition-id="ovA" data-width="1920" data-height="1080">
+    <div id="ova-chip" class="ova-chip clip" data-start="0.20" data-duration="3.60">TASK A · Inline edit<span>src/flask/helpers.py · get_debug_flag</span></div>
+
+    <div id="ova-k" class="clip" data-start="3.00" data-duration="3.60">
+      <div class="ova-tag tag-blue" style="left:700px; top:150px;">⌘⌥K on the selection → plain-language instruction</div>
+    </div>
+
+    <div id="ova-diff" class="clip" data-start="9.43" data-duration="4.90">
+      <div class="ova-box" style="left:738px; top:488px; width:1144px; height:240px;"></div>
+      <div class="ova-tag" style="left:1300px; top:440px;">diff rendered in the editor · 2 hunks</div>
+    </div>
+
+    <div id="ova-hunk" class="clip" data-start="14.33" data-duration="4.60">
+      <div class="ova-box amber" style="left:90px; top:512px; width:506px; height:262px;"></div>
+      <div class="ova-tag tag-amber" style="left:120px; top:462px;">per-hunk choice · untick = "Accept 1 of 2"</div>
+    </div>
+
+    <div id="ova-acc" class="clip" data-start="18.93" data-duration="2.40">
+      <div class="ova-box" style="left:90px; top:770px; width:152px; height:46px;"></div>
+      <div class="ova-tag" style="left:252px; top:774px;">accept → one undoable edit, saved</div>
+    </div>
+
+    <!-- After the terminal zoom (scale 1.7 around 1065,900): "False" sits near x 360–480, y 765–795 -->
+    <div id="ova-false" class="clip" data-start="25.25" data-duration="2.12">
+      <div class="ova-box" style="left:348px; top:762px; width:88px; height:34px;"></div>
+      <div class="ova-tag" style="left:450px; top:760px;">FLASK_DEBUG=off → False ✓</div>
+    </div>
+    <div id="ova-table" class="clip" data-start="29.80" data-duration="4.40">
+      <div class="ova-box" style="left:368px; top:850px; width:330px; height:192px;"></div>
+      <div class="ova-tag" style="left:712px; top:860px;">OFF · Off · n · N · no → False &nbsp;|&nbsp; 1 · true → True</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const pop = (sel, at) => tl.fromTo(`${sel} > *`, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", stagger: 0.08 }, at);
+    tl.fromTo("#ova-chip", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.20);
+    pop("#ova-k", 3.00); pop("#ova-diff", 9.43); pop("#ova-hunk", 14.33); pop("#ova-acc", 18.93); pop("#ova-false", 25.25); pop("#ova-table", 29.80);
+    tl.to({}, { duration: 0.1 }, 34.10);
+    window.__timelines["ovA"] = tl;
+  </script>
+</template>

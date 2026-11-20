@@ -1,0 +1,1 @@
+This is the context pack Forge built before the first model call: the C L I module, its tests and its docs, each with its reasons, in four point eight thousand of a seven thousand token budget, plus a Repo Map code graph.

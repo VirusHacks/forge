@@ -1,0 +1,1 @@
+Forge retries with backoff, two seconds, then four, and the editor stays responsive. Then it switches automatically to the fallback, in the same True Forge session, and the diff appears.

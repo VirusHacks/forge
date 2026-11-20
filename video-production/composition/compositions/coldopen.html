@@ -1,0 +1,62 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #0a0d13; font-family: Inter, sans-serif; color: #e6edf3; overflow: hidden; }
+    .co-shot { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden; }
+    .co-shot video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: contain; }
+    .co-shade { position: absolute; left: 0; right: 0; bottom: 0; height: 380px; background: linear-gradient(0deg, #0a0d13f2 0%, #0a0d13cc 45%, #0a0d1300 100%); }
+    .co-cap { position: absolute; left: 90px; bottom: 90px; padding: 22px 34px; border-radius: 20px; background: #0b0f16e0; border: 1.5px solid #2a3342; font-size: 76px; font-weight: 900; letter-spacing: -0.03em; line-height: 1.02; text-shadow: 0 6px 30px #000; }
+    .co-cap em { font-style: normal; color: #7ee787; }
+    .co-cap b { color: #9cc3ff; }
+    .co-cap.top { top: 90px; bottom: auto; }
+    .co-cap.right { left: auto; right: 90px; }
+    .co-cap.band { left: 0; right: 0; margin: 0 auto; width: 980px; text-align: center; bottom: 70px; }
+    .co-cap small { display: block; font-size: 30px; font-weight: 600; color: #c9d1d9; letter-spacing: 0; margin-top: 14px; }
+    .co-box { position: absolute; border: 4px solid #3fb950; border-radius: 12px; box-shadow: 0 0 30px #3fb95088; }
+    .co-tag { position: absolute; right: 70px; bottom: 60px; padding: 8px 16px; border-radius: 10px; background: #0b0f16d9; border: 1.5px solid #2a3342; font-size: 22px; font-weight: 700; color: #c9d1d9; }
+    #co-end { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, #2f6fe02e 0%, #9b7bff12 40%, #0a0d13 72%); }
+    #co-mark { position: absolute; left: 0; right: 0; top: 380px; text-align: center; }
+    #co-diamond { display: inline-block; width: 70px; height: 70px; background: #3b82f6; border-radius: 9px; margin-right: 38px; vertical-align: middle; }
+    #co-word { display: inline-block; font-size: 168px; font-weight: 900; letter-spacing: -0.05em; vertical-align: middle; }
+    #co-sub { position: absolute; left: 0; right: 0; top: 620px; text-align: center; font-size: 40px; color: #c9d1d9; }
+    #co-sub b { color: #c4b5fd; }
+    #co-team { position: absolute; left: 0; right: 0; bottom: 90px; text-align: center; font-size: 26px; color: #7d8590; }
+  </style>
+  <div id="root" data-composition-id="coldopen" data-width="1920" data-height="1080">
+    <!-- Every shot is real footage from the recorded tasks (assets/clips). -->
+    <div id="co-s1" class="co-shot"><video id="co-v1" class="clip" src="assets/clips/taskB.mp4" muted playsinline data-start="0" data-duration="2.3" data-media-start="2.1"></video></div>
+    <div id="co-s2" class="co-shot"><video id="co-v2" class="clip" src="assets/clips/taskB.mp4" muted playsinline data-start="2.3" data-duration="1.5" data-media-start="60.3"></video></div>
+    <div id="co-s3" class="co-shot"><video id="co-v3" class="clip" src="assets/clips/taskB.mp4" muted playsinline data-start="3.8" data-duration="1.4" data-media-start="75.9"></video></div>
+    <div id="co-s4" class="co-shot"><video id="co-v4" class="clip" src="assets/clips/taskC.mp4" muted playsinline data-start="5.2" data-duration="2.2" data-media-start="17.9"></video></div>
+    <div id="co-s5" class="co-shot"><video id="co-v5" class="clip" src="assets/clips/taskC.mp4" muted playsinline data-start="7.4" data-duration="2.0" data-media-start="31.7"></video></div>
+    <div id="co-b1" class="co-box clip" data-start="0.2" data-duration="2.1" style="left:72px; top:870px; width:536px; height:114px;"></div>
+    <div id="co-b2" class="co-box clip" data-start="2.35" data-duration="1.45" style="left:616px; top:46px; width:1018px; height:48px;"></div>
+    <div id="co-b3" class="co-box clip" data-start="3.85" data-duration="1.35" style="left:632px; top:800px; width:860px; height:66px;"></div>
+    <div id="co-b4" class="co-box clip" data-start="5.25" data-duration="2.15" style="left:76px; top:274px; width:524px; height:62px;"></div>
+    <div id="co-b5" class="co-box clip" data-start="7.95" data-duration="1.45" style="left:626px; top:494px; width:510px; height:84px;"></div>
+    <div id="co-c1" class="co-cap top right clip" data-start="0.15" data-duration="2.15">One sentence.<br/><b>No files named.</b></div>
+    <div id="co-c2" class="co-cap right clip" data-start="2.3" data-duration="1.5"><em>3 files</em> changed</div>
+    <div id="co-c3" class="co-cap top right clip" data-start="3.8" data-duration="1.4"><em>59 tests</em> passing</div>
+    <div id="co-c4" class="co-cap right clip" data-start="5.2" data-duration="2.2">Model fails →<br/><em>automatic fallback</em></div>
+    <div id="co-c5" class="co-cap band clip" data-start="7.4" data-duration="2.0">Nothing written <em>until you approve</em><small>git status: clean</small></div>
+    <div id="co-tag" class="co-tag clip" data-start="0.2" data-duration="9.2">real footage · pallets/flask 3.1.3</div>
+    <div id="co-end" class="clip" data-start="9.4" data-duration="1.4">
+      <div id="co-mark"><span id="co-diamond"></span><span id="co-word">Forge</span></div>
+      <div id="co-sub">a coding agent inside VS Code, built on <b>TrueForge</b></div>
+      <div id="co-team">Team Husttlers · TrueFoundry Forge-a-thon · Techfest, IIT Bombay</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // normal-size window; shot 5 slides up (no scaling) so the git lines sit mid-frame
+    tl.fromTo("#co-s5", { y: 0 }, { y: -300, duration: 0.5, ease: "power2.inOut" }, 7.45);
+    [["#co-b1", 0.2], ["#co-b2", 2.35], ["#co-b3", 3.85], ["#co-b4", 5.25], ["#co-b5", 7.95]].forEach(([b, t]) => tl.fromTo(b, { opacity: 0, scale: 1.06 }, { opacity: 1, scale: 1, duration: 0.25, ease: "power2.out" }, t));
+    ["#co-c1", "#co-c2", "#co-c3", "#co-c4", "#co-c5"].forEach((c, i) =>
+      tl.fromTo(c, { opacity: 0, y: 30, filter: "blur(6px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.28, ease: "power3.out" }, [0.15, 2.3, 3.8, 5.2, 7.4][i]));
+    tl.fromTo("#co-end", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 9.4);
+    tl.fromTo("#co-diamond", { scale: 0.4, rotation: 0 }, { scale: 1, rotation: 45, duration: 0.5, ease: "back.out(1.8)" }, 9.45);
+    tl.fromTo("#co-word", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 9.55);
+    tl.fromTo("#co-sub", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.4 }, 9.8);
+    tl.to({}, { duration: 0.1 }, 10.7);
+    window.__timelines["coldopen"] = tl;
+  </script>
+</template>

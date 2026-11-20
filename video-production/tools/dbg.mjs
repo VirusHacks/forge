@@ -1,0 +1,10 @@
+import { connect } from "./cdp.mjs";
+const c = await connect();
+const got = [];
+c.on("Target.attachedToTarget", p => got.push([p.sessionId, p.targetInfo.type, p.targetInfo.url.slice(0, 80)]));
+await c.send("Target.setAutoAttach", { autoAttach: true, waitForDebuggerOnStart: false, flatten: true });
+await new Promise(r => setTimeout(r, 800));
+console.log(got);
+const t = await c.send("Target.getTargets"); console.log(t.targetInfos.map(x => [x.type, x.url.slice(0, 80)]));
+const ft = await c.send("Page.getFrameTree"); const walk = (n, d=0) => { console.log(" ".repeat(d) + n.frame.url.slice(0, 90)); (n.childFrames||[]).forEach(k => walk(k, d+1)); }; walk(ft.frameTree);
+process.exit(0);

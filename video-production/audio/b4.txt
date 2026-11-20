@@ -1,0 +1,1 @@
+The review spans three files: the command, a test, and the docs.

@@ -1,0 +1,1 @@
+About two seconds later, the proposal comes back through True Forge as a real diff in the editor: one hunk for the docstring, one adding off and n. Each hunk is accepted or rejected on its own. I accept both, and the file is saved.

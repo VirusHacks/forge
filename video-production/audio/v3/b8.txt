@@ -1,0 +1,1 @@
+Scrolling up the same output, the secret key is masked too.

@@ -1,0 +1,1 @@
+First, Forge builds a context pack: the files that matter, each with a reason, ranked by text search and a Repo Map code graph, within a token budget. Then True Forge runs the loop, with any configured model. Every editor action, search, read, stage an edit, run a test, is an M C P tool. Edits stay in memory, and submitting them needs approval. That approval is your diff review.

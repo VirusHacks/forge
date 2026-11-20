@@ -1,0 +1,1 @@
+Two seconds later, a real diff opens in the editor. The model had to propose it through an approval-gated tool, so nothing is written yet. I can take each hunk separately, and I accept both.

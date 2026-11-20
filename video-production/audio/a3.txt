@@ -1,0 +1,1 @@
+Now the check. With FLASK DEBUG set to off, get debug flag prints False. Upper case, mixed case, and n are false too, while one and true stay true.

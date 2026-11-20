@@ -1,0 +1,1 @@
+Before any model call, Forge spends about three hundred milliseconds building a context pack. It takes the key terms from my request, ranks files by matches, then asks the Repo Map code graph who defines FlaskGroup, who calls it, and which tests cover it. It keeps four files, each with a reason, in four point eight of a seven thousand token budget.

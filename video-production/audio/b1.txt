@@ -1,0 +1,1 @@
+Task B: agent mode. The request names no files. It asks for a new command, a test, and documentation.

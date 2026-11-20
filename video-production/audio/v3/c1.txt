@@ -1,0 +1,1 @@
+Task C. The model endpoint refuses connections, a second model is set as fallback, and I repeat Task A.

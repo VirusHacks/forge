@@ -20,7 +20,7 @@ It is built to work on **free AI models** (Google Gemini, Groq, OpenRouter free 
 
 ## What makes it stand out
 
-1. **Graph-guided context.** Forge combines keyword ranking (BM25) with the [RepoMap](https://github.com/SylphxAI/repomap) code graph. The graph is centred on the symbol where both signals agree. Its callers, callees and tests go into the AI's context and are drawn as a small clickable diagram in the sidebar.
+1. **Graph-guided context.** Forge combines keyword ranking (BM25) with the [RepoMap](https://github.com/SylphxAI/repomap) code graph, and uses RepoMap's parser for exact function ranges. The graph is centred on the symbol where both signals agree. Its callers, callees and tests go into the AI's context, each caller edge is checked against the actual call-site line, and the graph is drawn as a small clickable diagram in the sidebar.
 2. **The agent checks its own work for free.** After every edit, Forge runs the relevant tests itself (in a sandbox) and tells the agent the result. No extra AI call is spent. Failures that existed before the change are ignored, so the agent never chases a problem it did not cause.
 3. **Quality gates.** If tests fail, or the request asked for tests or documentation that are missing, Forge refuses the first "I'm done" and explains what is missing.
 4. **A harness that protects against weak models.** Forge fixes small copy mistakes in edits, refuses duplicate insertions, sends incomplete edits back for correction, and tells the agent how many AI calls it has left.
@@ -59,7 +59,7 @@ You need Node.js 20+, Git, VS Code and at least one AI model (free tiers work). 
 
 ```bash
 # 1. Install and build the extension
-git clone https://github.com/dash10107/iit-true-forge.git && cd iit-true-forge
+git clone https://github.com/VirusHacks/forge.git && cd forge
 npm ci --prefix extension && npm --prefix extension run compile
 
 # 2. Start TrueForge (leave this terminal open)
@@ -74,7 +74,7 @@ Forge registers its agent definitions ([trueforge/agents/](trueforge/agents)) in
 
 ### Using Forge
 
-- **Inline edit:** select code, press **⌘⌥K** (Ctrl+Alt+K on Windows/Linux), and type what you want. A diff opens; accept or reject each hunk in the Forge sidebar.
+- **Inline edit:** select code, press **⌘⌥K** (Ctrl+Alt+K on Windows/Linux), and type what you want. A diff opens with **✓ Accept / ✕ Reject above every hunk** (⌘⌥Y / ⌘⌥N); the Forge sidebar shows the same choices.
 - **Agent mode:** click the Forge icon in the activity bar, describe the change, and press ⌘↵. Watch the context card, the code graph and each tool call, then review the hunks. *Open in TrueForge ↗* shows the live session.
 - **Stop:** the Stop button, Esc in the sidebar, or ⌘⌥. (Ctrl+Alt+.). Nothing is written before review, so stopping is always safe.
 - **Undo:** the *Undo* button after applying, or **Forge: Undo Last Applied Change**.
@@ -131,4 +131,4 @@ node extension/scripts/agent-live.mjs <folder> "<request>" <model>[,<backup>...]
 - Free AI tiers often return "busy" (503) or "rate limit" (429) errors. Forge retries and switches models, but a run can still end at the call limit (`forge.maxModelCalls`). Staged changes are then still offered for review.
 - Weaker free models make many small tool calls, so agent runs take 20–35 AI calls.
 - The command sandbox uses macOS `sandbox-exec`. On Linux, commands run in a throwaway copy without OS-level isolation. Windows is untested.
-- The code outline is pattern-based (Python, JS/TS, Go, Rust, Markdown/RST). RepoMap's call graph is static analysis, so its edges are inferences.
+- The code graph is static analysis. Forge keeps only edges whose call-site line names the symbol, but dynamic calls can still be missed. Symbol outlines come from RepoMap's parser where it supports the language, and fall back to patterns elsewhere.

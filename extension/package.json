@@ -7,9 +7,9 @@
   "author": "Team Husttlers",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dash10107/iit-true-forge"
+    "url": "https://github.com/VirusHacks/forge"
   },
-  "homepage": "https://github.com/dash10107/iit-true-forge#readme",
+  "homepage": "https://github.com/VirusHacks/forge#readme",
   "license": "MIT",
   "engines": {
     "vscode": "^1.100.0"

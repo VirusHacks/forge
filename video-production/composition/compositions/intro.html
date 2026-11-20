@@ -1,0 +1,40 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #0a0d13; font-family: Inter, sans-serif; color: #e6edf3; overflow: hidden; }
+    #intro-glow { position: absolute; left: 50%; top: 42%; width: 1400px; height: 900px; margin: -450px 0 0 -700px; background: radial-gradient(ellipse at center, #2f6fe033 0%, #9b7bff14 40%, transparent 70%); }
+    #intro-mark { position: absolute; left: 0; right: 0; top: 250px; text-align: center; }
+    #intro-diamond { display: inline-block; width: 64px; height: 64px; background: #3b82f6; transform: rotate(45deg); border-radius: 8px; margin-right: 34px; vertical-align: middle; }
+    #intro-word { display: inline-block; font-size: 150px; font-weight: 900; letter-spacing: -0.05em; vertical-align: middle; }
+    #intro-tag { position: absolute; left: 0; right: 0; top: 470px; text-align: center; font-size: 44px; color: #c9d1d9; font-weight: 400; }
+    #intro-tag b { color: #c4b5fd; font-weight: 700; }
+    #intro-points { position: absolute; left: 0; right: 0; top: 600px; text-align: center; }
+    .intro-pt { display: inline-block; margin: 0 14px; padding: 16px 26px; border-radius: 14px; border: 1.5px solid #2a3342; background: #0f141c; font-size: 28px; color: #e6edf3; }
+    .intro-pt i { font-style: normal; color: #3fb950; margin-right: 10px; }
+    #intro-team { position: absolute; left: 0; right: 0; bottom: 110px; text-align: center; font-size: 26px; color: #7d8590; letter-spacing: 0.04em; }
+  </style>
+  <div id="root" data-composition-id="intro" data-width="1920" data-height="1080">
+    <div id="intro-glow"></div>
+    <div id="intro-mark"><span id="intro-diamond"></span><span id="intro-word">Forge</span></div>
+    <div id="intro-tag">an editor-native coding agent, running on <b>TrueForge</b></div>
+    <div id="intro-points">
+      <span id="intro-p1" class="intro-pt"><i>●</i>finds the right code</span>
+      <span id="intro-p2" class="intro-pt"><i>●</i>edits several files</span>
+      <span id="intro-p3" class="intro-pt"><i>●</i>every change reviewed before it touches disk</span>
+    </div>
+    <div id="intro-team">Team Husttlers · TrueFoundry Forge-a-thon · Techfest, IIT Bombay</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#intro-glow", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" }, 0);
+    tl.fromTo("#intro-diamond", { opacity: 0, scale: 0.4, rotation: 0 }, { opacity: 1, scale: 1, rotation: 45, duration: 0.8, ease: "back.out(1.6)" }, 0.15);
+    tl.fromTo("#intro-word", { opacity: 0, x: -30, filter: "blur(10px)" }, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }, 0.35);
+    tl.fromTo("#intro-tag", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.8);
+    tl.fromTo("#intro-p1", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 2.4);
+    tl.fromTo("#intro-p2", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 3.0);
+    tl.fromTo("#intro-p3", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 3.6);
+    tl.fromTo("#intro-team", { opacity: 0 }, { opacity: 1, duration: 0.8 }, 1.2);
+    tl.to("#intro-tag b", { color: "#ffffff", textShadow: "0 0 24px #9b7bff", duration: 0.5 }, 4.4);
+    tl.to({}, { duration: 0.1 }, 6.1);
+    window.__timelines["intro"] = tl;
+  </script>
+</template>

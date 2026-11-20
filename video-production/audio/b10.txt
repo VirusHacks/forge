@@ -1,0 +1,1 @@
+And here is the True Forge session for this run: the context pack in its first turn, each turn's tool calls, and deferred tool loading.

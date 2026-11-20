@@ -1,0 +1,1 @@
+Git status shows exactly three changed files. Undo restores all of them, and the workspace is clean.

@@ -1,0 +1,1 @@
+In short: True Forge runs the loop, and every editor action is an M C P tool. Context is a budgeted pack, with a reason for every file. Nothing reaches disk without per-hunk approval, and it can be undone. And when a model fails, Forge backs off and falls back, without touching the workspace. This is Forge, from team Hustlers.

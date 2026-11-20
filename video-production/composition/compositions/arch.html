@@ -1,0 +1,142 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #0a0d13; font-family: Inter, sans-serif; color: #e6edf3; overflow: hidden; }
+    #arch-grid { position: absolute; inset: 0; background-image: linear-gradient(#ffffff08 1px, transparent 1px), linear-gradient(90deg, #ffffff08 1px, transparent 1px); background-size: 48px 48px; }
+    .arch-label { position: absolute; font-size: 22px; letter-spacing: 0.14em; text-transform: uppercase; color: #7d8590; font-weight: 700; }
+    .arch-card { position: absolute; border: 1.5px solid #2a3342; border-radius: 18px; background: #0f141c; padding: 26px 28px; }
+    .arch-card h3 { font-size: 30px; font-weight: 700; margin-bottom: 6px; }
+    .arch-card .sub { font-size: 20px; color: #8b949e; margin-bottom: 18px; }
+    .arch-row { border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; background: #151b25; border: 1.5px solid #222b38; }
+    .arch-row b { display: block; font-size: 22px; margin-bottom: 4px; }
+    .arch-row span { font-size: 18px; color: #9da7b3; line-height: 1.35; display: block; }
+    .chip { display: inline-block; font-family: "JetBrains Mono", monospace; font-size: 18px; padding: 8px 12px; border-radius: 9px; background: #151b25; border: 1.5px solid #2a3342; margin: 0 10px 10px 0; color: #c9d1d9; }
+    .chip.mem { border-color: #3fb95066; color: #7ee787; }
+    .chip.gate { border-color: #e3b34188; color: #f2cc60; }
+    #arch-title { position: absolute; left: 120px; top: 70px; font-size: 44px; font-weight: 800; letter-spacing: -0.02em; }
+    #arch-title em { font-style: normal; color: #9b7bff; }
+    #arch-svg { position: absolute; inset: 0; }
+    .flowtag { position: absolute; font-family: "JetBrains Mono", monospace; font-size: 17px; color: #c9d1d9; background: #0a0d13; padding: 2px 8px; border-radius: 6px; }
+    #arch-impact { position: absolute; left: 1180px; top: 40px; width: 620px; padding: 12px 18px; border-radius: 14px; border: 1.5px solid #e3b34188; background: #16130a; font-size: 19px; color: #c9d1d9; }
+    #arch-impact div { font-size: 27px; font-weight: 800; margin-top: 4px; color: #e6edf3; } #arch-impact em { font-style: normal; color: #f2cc60; }
+    #arch-impact small { display: block; font-size: 15px; color: #8b949e; margin-top: 4px; }
+    .gnode { position: absolute; font-family: "JetBrains Mono", monospace; font-size: 16px; padding: 6px 10px; border-radius: 8px; background: #151b25; border: 1.5px solid #2a3342; white-space: nowrap; }
+    .gnode.focus { border-color: #4c8dff; background: #12233f; font-size: 19px; font-weight: 700; }
+    .gnode.test { border-color: #3fb950; color: #7ee787; }
+    .gedge { stroke: #6e7681; stroke-width: 2; fill: none; }
+    #g-ok { position: absolute; left: 22px; top: 226px; font-size: 18px; font-weight: 700; color: #7ee787; }
+    #g-bar { position: absolute; left: 330px; top: 224px; width: 270px; height: 26px; border-radius: 7px; background: #151b25; border: 1px solid #2a3342; overflow: hidden; }
+    #g-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 68%; background: #3fb950; }
+    #g-bar span { position: absolute; left: 8px; top: 3px; font-size: 14px; font-weight: 800; color: #0b0f16; }
+  </style>
+  <div id="root" data-composition-id="arch" data-width="1920" data-height="1080">
+    <div id="arch-grid"></div>
+    <div id="arch-title">Why Forge is built this way, on <em>TrueForge</em></div>
+    <div id="arch-impact"><b>Measured impact</b> · three-file Task B proposal, free models<div><em>85 → ~25</em> model calls · <em>1.22M → ~0.39M</em> input tokens</div><small>v1 (plain tool loop) → v2 (graph + context pack + batched MCP tools) · reports/21</small></div>
+
+    <!-- VS Code / Forge extension -->
+    <div id="arch-vscode" class="arch-card" style="left:120px; top:170px; width:620px; height:560px;">
+      <h3>VS Code · Forge extension</h3>
+      <div class="sub">the editor stays in control</div>
+      <div id="arch-req" class="arch-row"><b>Request</b><span>inline edit (⌘⌥K on a selection) or the agent panel</span></div>
+      <div id="arch-ctx" class="arch-row"><b>Context pack, before any model call</b><span>BM25 + RepoMap graph · a reason per file · token budget (7k, or 2.2k for rate-limited models)</span></div>
+      <div id="arch-review" class="arch-row"><b>Per-hunk diff review</b><span>accept / reject each hunk · apply in one edit · Undo</span></div>
+      <div id="arch-router" class="arch-row"><b>Model router</b><span>retry with backoff → automatic fallback, same session</span></div>
+    </div>
+
+    <!-- Graph engineering -->
+    <div id="arch-graph" class="arch-card" style="left:120px; top:750px; width:620px; height:270px; border-color:#3fb95066; padding:18px 22px;">
+      <h3 style="color:#7ee787; font-size:26px">Graph engineering · RepoMap code graph</h3>
+      <div class="gnode" id="g-c1" style="left:22px; top:78px">test_app_cli_has_app_context</div>
+      <div class="gnode" id="g-c2" style="left:22px; top:128px">TestRoutes.invoke</div>
+      <div class="gnode" id="g-c3" style="left:22px; top:178px">test_flaskgroup_nested</div>
+      <div class="gnode focus" id="g-f" style="left:300px; top:124px">FlaskGroup</div>
+      <div class="gnode" id="g-a" style="left:462px; top:78px">AppGroup</div>
+      <div class="gnode test" id="g-t1" style="left:462px; top:128px">test_cli.py</div>
+      <div class="gnode test" id="g-t2" style="left:462px; top:178px">test_testing.py</div>
+      <svg id="g-svg" viewBox="0 0 620 270" style="position:absolute; left:0; top:0; width:620px; height:270px">
+        <path class="gedge" d="M262 92 L300 134" /><path class="gedge" d="M196 142 L300 140" /><path class="gedge" d="M244 192 L300 146" />
+        <path class="gedge" d="M410 134 L462 92" /><path class="gedge" d="M410 140 L462 142" /><path class="gedge" d="M410 146 L462 192" />
+      </svg>
+      <div id="g-ok">✓ every edge verified at its call site</div>
+      <div id="g-bar"><div id="g-fill"></div><span>context pack · 4.8k / 7k tokens</span></div>
+    </div>
+
+    <!-- TrueForge -->
+    <div id="arch-tf" class="arch-card" style="left:860px; top:170px; width:500px; height:440px; border-color:#9b7bff66;">
+      <h3 style="color:#c4b5fd">TrueForge (local)</h3>
+      <div class="sub">runs the agent loop</div>
+      <div class="arch-row"><b>Sessions · turns · streamed events</b></div>
+      <div class="arch-row"><b>Tool calls &amp; tool approval</b></div>
+      <div class="arch-row"><b>Compaction · deferred tool loading</b></div>
+    </div>
+
+    <!-- Model -->
+    <div id="arch-model" class="arch-card" style="left:1480px; top:170px; width:320px; height:440px;">
+      <h3>Any model</h3>
+      <div class="sub">configured in TrueForge</div>
+      <div class="arch-row"><b>Gemini</b></div>
+      <div class="arch-row"><b>Groq</b></div>
+      <div class="arch-row"><b>OpenRouter</b></div>
+      <div class="arch-row"><b>…OpenAI-compatible</b></div>
+    </div>
+
+    <!-- MCP tools -->
+    <div id="arch-mcp" class="arch-card" style="left:860px; top:660px; width:940px; height:330px; border-color:#4c8dff66;">
+      <h3 style="color:#9cc3ff">Nine MCP tools we built</h3>
+      <div class="sub">batched · graph-aware · staged in memory · sandboxed · approval-gated</div>
+      <div id="arch-chips">
+        <span id="arch-c1" class="chip">search_code</span><span id="arch-c2" class="chip">read_code</span><span id="arch-c3" class="chip">find_symbol · graph</span><span class="chip">list_files</span><span class="chip">view_staged</span><span class="chip">discard_staged</span>
+        <span id="arch-stage" class="chip mem">stage_edits · memory only</span><span id="arch-run" class="chip mem">run_command · sandboxed copy</span>
+        <span id="arch-submit" class="chip gate">submit_for_review · needs approval</span>
+      </div>
+    </div>
+
+    <svg id="arch-svg" viewBox="0 0 1920 1080">
+      <defs>
+        <marker id="arch-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d1d9" /></marker>
+      </defs>
+      <path id="arch-p1" d="M740 370 L860 370" stroke="#c9d1d9" stroke-width="3" fill="none" marker-end="url(#arch-arrow)" />
+      <path id="arch-p2" d="M1360 330 L1480 330" stroke="#9b7bff" stroke-width="3" fill="none" marker-end="url(#arch-arrow)" />
+      <path id="arch-p3" d="M1480 450 L1360 450" stroke="#9b7bff" stroke-width="3" fill="none" marker-end="url(#arch-arrow)" />
+      <path id="arch-p4" d="M1110 610 L1110 660" stroke="#4c8dff" stroke-width="3" fill="none" marker-end="url(#arch-arrow)" />
+      <path id="arch-p5" d="M860 870 C 800 870, 800 600, 740 600" stroke="#e3b341" stroke-width="3" fill="none" marker-end="url(#arch-arrow)" />
+    </svg>
+    <div id="arch-t1" class="flowtag" style="left:742px; top:330px;">session</div>
+    <div id="arch-t2" class="flowtag" style="left:1362px; top:290px;">model call</div>
+    <div id="arch-t4" class="flowtag" style="left:1124px; top:618px;">tool calls</div>
+    <div id="arch-t5" class="flowtag" style="left:640px; top:810px; color:#f2cc60;">approval → review</div>
+    <div id="arch-glow" style="position:absolute; border-radius:14px; border:3px solid #4c8dff; box-shadow:0 0 30px #4c8dff88; opacity:0; pointer-events:none;"></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const draw = (sel, at, dur = 0.6) => {
+      const p = document.querySelector(sel); const len = p.getTotalLength();
+      tl.fromTo(p, { opacity: 0, attr: { "stroke-dasharray": len, "stroke-dashoffset": len } }, { opacity: 1, attr: { "stroke-dashoffset": 0 }, duration: dur, ease: "power2.inOut" }, at);
+    };
+    const show = (sel, at, y = 24) => tl.fromTo(sel, { opacity: 0, y }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, at);
+    const box = sel => { const r = document.querySelector(sel).getBoundingClientRect(); return { left: r.left - 6, top: r.top - 6, width: r.width + 12, height: r.height + 12 }; };
+    const glow = (sel, at, color = "#4c8dff") => tl.to("#arch-glow", { ...box(sel), borderColor: color, boxShadow: `0 0 34px ${color}88`, opacity: 1, duration: 0.45, ease: "power2.inOut" }, at);
+
+    show("#arch-title", 0.1, 12);
+    show("#arch-tf", 1.9); glow("#arch-tf", 2.0, "#9b7bff");                     // "TrueForge runs the agent loop"
+    show("#arch-model", 2.6); draw("#arch-p2", 2.8); draw("#arch-p3", 3.1); show("#arch-t2", 3.0, 0);
+    show("#arch-vscode", 4.0); draw("#arch-p1", 4.4); show("#arch-t1", 4.7, 0);   // "what that loop sees and touches"
+    tl.fromTo("#arch-req, #arch-ctx, #arch-review, #arch-router", { opacity: 0.25 }, { opacity: 1, duration: 0.4, stagger: 0.1 }, 4.2);
+    show("#arch-graph", 7.4); glow("#arch-graph", 7.5, "#3fb950");                // "Graph engineering"
+    tl.fromTo("#arch-graph .gnode", { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.3, stagger: 0.45 }, 8.0);
+    tl.fromTo("#arch-graph .gedge", { opacity: 0 }, { opacity: 1, duration: 0.3, stagger: 0.3 }, 9.6);
+    tl.to("#arch-graph .gedge", { stroke: "#3fb950", duration: 0.3, stagger: 0.12 }, 13.1);   // "verifies every edge"
+    tl.fromTo("#g-ok", { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3 }, 13.4);
+    tl.fromTo("#g-fill", { scaleX: 0, transformOrigin: "0% 50%" }, { scaleX: 1, duration: 0.8, ease: "power2.out" }, 15.6);  // "packs … into a token budget"
+    tl.fromTo("#g-bar", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 15.4);
+    glow("#arch-ctx", 15.5, "#3fb950");
+    show("#arch-mcp", 20.0); draw("#arch-p4", 20.2); show("#arch-t4", 20.4, 0); glow("#arch-chips", 20.3, "#4c8dff");  // "nine MCP tools we built"
+    const hi = (c, t, col = "#24406b") => tl.fromTo(c, { backgroundColor: "#151b25" }, { backgroundColor: col, duration: 0.25, yoyo: true, repeat: 1 }, t);
+    hi("#arch-c1", 23.8); hi("#arch-c2", 24.1); hi("#arch-c3", 25.0); hi("#arch-stage", 25.9, "#1f4d2a"); hi("#arch-run", 26.8, "#1f4d2a"); hi("#arch-submit", 27.8, "#5a4a12");
+    draw("#arch-p5", 28.0, 0.7); show("#arch-t5", 28.2, 0); glow("#arch-review", 28.3, "#e3b341");
+    tl.fromTo("#arch-impact", { opacity: 0, scale: 0.94 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 28.9);  // "85 → ~25"
+    glow("#arch-impact", 29.0, "#e3b341");
+    tl.to({}, { duration: 0.1 }, 33.7);
+    window.__timelines["arch"] = tl;
+  </script>
+</template>

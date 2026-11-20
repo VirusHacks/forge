@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; background: #0a0d13; font-family: Inter, sans-serif; color: #e6edf3; overflow: hidden; }
+    #recap-title { position: absolute; left: 160px; top: 90px; font-size: 52px; font-weight: 800; letter-spacing: -0.02em; }
+    .recap-row { position: absolute; left: 160px; width: 1600px; display: flex; align-items: baseline; gap: 26px; }
+    .recap-row .k { width: 330px; flex: none; font-size: 26px; font-weight: 700; color: #9cc3ff; letter-spacing: 0.02em; }
+    .recap-row .v { font-size: 32px; color: #e6edf3; }
+    .recap-row .v small { display: block; font-size: 23px; color: #8b949e; margin-top: 6px; }
+    #recap-end { position: absolute; left: 0; right: 0; bottom: 90px; text-align: center; font-size: 28px; color: #8b949e; }
+    #recap-end b { color: #e6edf3; }
+    #recap-diamond { display: inline-block; width: 22px; height: 22px; background: #3b82f6; transform: rotate(45deg); border-radius: 3px; margin-right: 16px; }
+  </style>
+  <div id="root" data-composition-id="recap" data-width="1920" data-height="1080">
+    <div id="recap-title">Forge = TrueForge's loop + what a coding agent needs</div>
+    <div id="recap-r1" class="recap-row" style="top:210px"><div class="k">B4 · TrueForge</div><div class="v">TrueForge's loop; editor actions are MCP tools<small>approval-gated submit_for_review is the diff review · deferred tool loading · compaction</small></div></div>
+    <div id="recap-r2" class="recap-row" style="top:340px"><div class="k">B1 · Context</div><div class="v">Deliberate context, before the first model call<small>BM25 + RepoMap code graph · a reason per file · 4.8k / 7k token budget</small></div></div>
+    <div id="recap-r3" class="recap-row" style="top:470px"><div class="k">B2 · Safe edits</div><div class="v">Staged in memory, per-hunk review, one-click Undo<small>nothing reaches disk without approval · git clean after Undo</small></div></div>
+    <div id="recap-r4" class="recap-row" style="top:600px"><div class="k">Validation</div><div class="v">Tests run in a sandboxed copy after every edit<small>the agent's broken tests were caught and fixed before review · 59 passed</small></div></div>
+    <div id="recap-r5" class="recap-row" style="top:730px"><div class="k">B3 · Failure</div><div class="v">Backoff, then automatic fallback in the same session<small>the workspace is never touched by a failed run</small></div></div>
+    <div id="recap-end"><span id="recap-diamond"></span><b>Forge</b> · Team Husttlers · github.com/VirusHacks/forge</div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#recap-title", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+    ["#recap-r1", "#recap-r2", "#recap-r3", "#recap-r4", "#recap-r5"].forEach((s, i) =>
+      tl.fromTo(s, { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, [0.3, 1.9, 3.2, 4.1, 5.0][i]));
+    tl.fromTo("#recap-end", { opacity: 0 }, { opacity: 1, duration: 0.8 }, 6.2);
+    tl.to({}, { duration: 0.1 }, 8.9);
+    window.__timelines["recap"] = tl;
+  </script>
+</template>

@@ -1,0 +1,1 @@
+Here's a sample app with secrets in its config.

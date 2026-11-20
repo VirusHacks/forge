@@ -1,0 +1,1 @@
+Here is the True Forge session itself: my request with Forge's context pack, then each turn's tool calls.

@@ -1,0 +1,1 @@
+Git status and git diff confirm that the failed model changed nothing in the workspace.

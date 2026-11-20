@@ -1,0 +1,1 @@
+window.__sc = () => [...document.querySelectorAll("div")].filter(e => e.scrollHeight > e.clientHeight + 500 && getComputedStyle(e).overflowY.match(/auto|scroll/)).sort((a, b) => b.scrollHeight - a.scrollHeight)[0];

@@ -37,10 +37,10 @@ Before the first model call, Forge builds a **context pack** under a token budge
 
 1. **Terms.** Identifier-aware term extraction. Words that describe *which kind of file* is wanted ("test", "documented") become **role intent**, not search terms.
 2. **BM25 over lines.** Scores are length-normalised, so large files do not win by size. Files that *define* an identifier named in the request get a strong boost. Filename matches count. Lines where several terms co-occur (registration sites) add weight. Changelogs are penalised.
-3. **RepoMap code graph.** [RepoMap](https://github.com/SylphxAI/repomap) indexes a private mirror of the workspace. Forge takes the RepoMap symbol hits and then **anchors the graph focus to the hit inside the best lexically ranked implementation file**, so text ranking and graph ranking must agree. The focus's **callers, callees and tests** are pulled in as candidates with reasons ("calls FlaskGroup (static graph)", "RepoMap test for FlaskGroup").
+3. **RepoMap code graph.** [RepoMap](https://github.com/SylphxAI/repomap) indexes a private mirror of the workspace. Forge takes the RepoMap symbol hits and then **anchors the graph focus to the hit inside the best lexically ranked implementation file**, so text ranking and graph ranking must agree. The focus's **callers, callees and tests** are pulled in as candidates with reasons. A caller edge is kept only if its call-site line actually names the symbol (all 5 for `FlaskGroup`) ("calls FlaskGroup (static graph)", "RepoMap test for FlaskGroup").
 4. **Module affinity.** Tests and docs named after the top implementation file are boosted (`cli.py` → `tests/test_cli.py`, `docs/cli.rst`).
 5. **Role selection.** The best implementation file comes first, then the best test and docs file when the request asks for them. Any further file needs *structural* evidence: it defines a requested identifier, is a graph neighbour, is named after the module, or was mentioned. Shared words alone are not enough.
-6. **Symbol-level excerpts.** Forge excerpts whole functions, classes and doc sections ranked by term density, not arbitrary line windows. Each file also gets an outline with line ranges, so the agent can request exactly the symbol it needs.
+6. **Symbol-level excerpts.** Forge excerpts whole functions, classes and doc sections ranked by term density, not arbitrary line windows. Symbol ranges come from **RepoMap's AST members** (for example `FlaskGroup.get_command` at 617–642); a pattern outline is the fallback for files RepoMap does not parse, such as reStructuredText. Each file also gets an outline with line ranges, so the agent can request exactly the symbol it needs.
 7. **Mentions.** `@file` and `@symbol` mentions are always included.
 
 The pack gives the model the selected files with reasons, a **"Code graph" section** (focus, called from, calls, tests), outlines and code. The UI shows the same data as a context card and a node-link diagram.
@@ -96,7 +96,8 @@ Code: [`extension/src/agent/tools.ts`](../extension/src/agent/tools.ts), [`stagi
 
 Code: [`extension/src/review/reviewController.ts`](../extension/src/review/reviewController.ts).
 
-- **Nothing is written before review.** Proposals open as diff tabs against a virtual base; the sidebar lists every hunk with `+/-` counts, a preview and a verification badge.
+- **Nothing is written before review.** Proposals open as diff tabs against a virtual base. Every hunk has **✓ Accept / ✕ Reject CodeLens buttons inside the diff** (⌘⌥Y / ⌘⌥N, and title-bar buttons to apply or reject all); deciding the last hunk applies the accepted ones. The sidebar card mirrors the same decisions with `+/-` counts, previews and a verification badge.
+- **History persists** per workspace (25 runs); a run interrupted by closing the window is marked as such.
 - **At apply time each file is re-read and compared with the exact text the proposal was based on.** A file changed during review is never overwritten. Accepted hunks are applied by offset in one `WorkspaceEdit`, then saved.
 - **Undo** restores the previous content (or deletes created files) if the files still contain exactly what was applied. VS Code's own undo also works per buffer.
 - **Cancellation** aborts the TrueForge session. Staged edits are discarded, so the workspace is untouched.
