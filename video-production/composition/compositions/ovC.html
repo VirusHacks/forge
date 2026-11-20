@@ -15,27 +15,27 @@
   <div id="root" data-composition-id="ovC" data-width="1920" data-height="1080">
     <div id="ovc-chip" class="ovc-chip clip" data-start="0.20" data-duration="4.60">TASK C · Resilience<span>broken model endpoint · repeat Task A</span></div>
 
-    <div id="ovc-cfg" class="clip" data-start="0.80" data-duration="3.26">
+    <div id="ovc-cfg" class="clip" data-start="0.80" data-duration="2.81">
       <div class="ovc-box blue" style="left:728px; top:204px; width:790px; height:36px;"></div>
       <div class="ovc-tag tag-blue" style="left:740px; top:250px;">second configured model = automatic fallback</div>
     </div>
-    <div id="ovc-curl" class="clip" data-start="5.31" data-duration="1.88">
+    <div id="ovc-curl" class="clip" data-start="4.72" data-duration="1.67">
       <div class="ovc-box red" style="left:636px; top:814px; width:740px; height:30px;"></div>
       <div class="ovc-tag tag-red" style="left:640px; top:762px;">selected model's endpoint: connection refused</div>
     </div>
 
-    <div id="ovc-retry" class="clip" data-start="12.06" data-duration="6.10">
+    <div id="ovc-retry" class="clip" data-start="11.26" data-duration="6.10">
       <div class="ovc-box" style="left:80px; top:196px; width:516px; height:76px;"></div>
       <div class="ovc-tag" style="left:620px; top:212px;">retry with backoff: 2 s, then 4 s</div>
     </div>
-    <div id="ovc-switch" class="clip" data-start="18.26" data-duration="6.90">
+    <div id="ovc-switch" class="clip" data-start="17.46" data-duration="6.90">
       <div class="ovc-box green" style="left:80px; top:278px; width:516px; height:54px;"></div>
       <div class="ovc-tag tag-green" style="left:620px; top:282px;">automatic fallback · same TrueForge session</div>
       <div class="ovc-box green" style="left:1306px; top:860px; width:604px; height:42px;"></div>
     </div>
 
     <!-- After terminal zoom (scale 1.8 around 900,840) -->
-    <div id="ovc-clean" class="clip" data-start="32.21" data-duration="2.00">
+    <div id="ovc-clean" class="clip" data-start="31.41" data-duration="2.00">
       <div class="ovc-box green" style="left:626px; top:494px; width:510px; height:84px;"></div>
       <div class="ovc-tag tag-green" style="left:520px; top:820px; font-size:30px;">git status: empty · git diff: exit 0 → workspace unchanged</div>
     </div>
@@ -44,8 +44,8 @@
     const tl = gsap.timeline({ paused: true });
     const pop = (sel, at) => tl.fromTo(`${sel} > *`, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", stagger: 0.08 }, at);
     tl.fromTo("#ovc-chip", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.20);
-    pop("#ovc-cfg", 0.80); pop("#ovc-curl", 5.31); pop("#ovc-retry", 12.06); pop("#ovc-switch", 18.26); pop("#ovc-clean", 32.21);
-    tl.to({}, { duration: 0.1 }, 34.11);
+    pop("#ovc-cfg", 0.80); pop("#ovc-curl", 4.72); pop("#ovc-retry", 11.26); pop("#ovc-switch", 17.46); pop("#ovc-clean", 31.41);
+    tl.to({}, { duration: 0.1 }, 33.31);
     window.__timelines["ovC"] = tl;
   </script>
 </template>

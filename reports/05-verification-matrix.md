@@ -1,4 +1,29 @@
-# Competition-aligned verification matrix
+# Competition-aligned verification matrix and self-assessment
+
+## Final self-assessment (20 November 2026, submission build)
+
+This is our own reading of the rubric's written anchors (`task.md` → Evaluation Criteria) against what the **final demo video** (`TRUEFORGE_FORGEATHON_DEMO.mp4`, 3:59) and the write-up show on screen. Judges score what the extension visibly does; where a capability is implemented but not shown, we score the anchor the video supports, not the code. Timestamps are positions in the final video, and each was checked against frames from it (see `video-production/JUDGING_EVIDENCE_MATRIX.md`).
+
+| Criterion | Max | Anchor we believe applies | Self-score | Video | Evidence on screen | Gap / risk |
+|---|---:|---|---:|---|---|---|
+| A1 Inline edit | 10 | *diff rendered with per-hunk accept and reject* | **10** | 0:51–1:10 | Selection → ⌘⌥K → typed instruction → inline diff (2 hunks) → hunk unticked/re-ticked → Accept → `FLASK_DEBUG=off … → False` | Per-hunk choice is shown in the sidebar for Task A; the in-diff CodeLens appears in Task B (2:18) |
+| A2 Agent mode | 10 | *discovers and edits three or more files unprompted* | **10** | 1:19–2:18, 2:56 | Request with no file names → `cli.py`, `test_cli.py`, `cli.rst` → `git status` shows exactly those 3 | The run needed a 4-model free-tier fallback chain and 3 recording takes |
+| A3 Streaming and cancellation | 10 | *cancellation is immediate and the workspace stays consistent* | **10** | 1:43–2:16, 3:11–3:17, 3:28 | Tool calls and banners stream live; live Task B run, Stop pressed after 3 tool calls (3:12) → "Cancelled. No files were changed." within a second → `git status --short && git diff --exit-code` → "cancelled: nothing written" (3:15); the editor stays responsive during retries | The cancel is a separate take of the same Task B request (not the run that produced the diff), and is labelled as such in the evidence matrix |
+| B1 Context assembly | 15 | *retrieval with a size budget, strategy stated, visibly at work in Task B (shows which files it chose and why)* | **15** | 0:18–0:27, 1:25–1:43 | RepoMap graph (call-site-verified edges) + BM25 → context card: 4 files, a reason each, 4.8k / 7k tokens; a labelled pause explains each step | `@file`/`@symbol` exist but are not exercised (Task B names no files) |
+| B2 Diff safety | 10 | *per-hunk review and a working undo of an applied change, shown on screen* | **10** | 0:59, 2:18–3:02, 3:41–3:48 | Edits staged in memory; per-hunk review and CodeLens; nothing written before Accept; Undo → "undo: all files restored"; a rejected proposal leaves git clean | — |
+| B3 Resilience | 10 | *automatic fallback to a second configured model with no user action, workspace unchanged* | **10** | 3:21–3:48 | `curl` → connection refused; retry after 2 s, then 4 s; "Fallback … Same TrueForge session continues"; `git status` empty; "workspace unchanged" | — |
+| B4 TrueForge integration | 10 | *MCP tools + approval driving the review, plus a context-engineering feature explained in the write-up and visible in the session* | **10** | 0:11–0:45, 1:43–2:16, 2:23–2:30, 3:04 | 9 MCP tools; "Tool Approval Required for submit_for_review" → "The user accepted 4 hunk(s)"; **deferred tool loading** (`list_tools`, `get_tool_info`, `call_tool`) and **compaction** in the run log and session | Subagents, skills and Code Mode are not used |
+| C1 Video | 10 | *all three complete, legible, and visibly verified on screen* | **10** | 0:45 · 1:19 · 3:17 | A → B → C in order; each followed by terminal verification; Task B session and a live cancel shown; 3:59 | Task B is shown at 5× (labelled, continuous from instruction to review) |
+| C2 Write-up | 15 | *also carries an accurate scorecard with timestamps and an honest limitations section* | **15** | — | 3-page PDF, 8 required headings, scorecard with verified timestamps, limitations and "another month" | — |
+| **Total** | **100** | | **100** | | | Every anchor is now shown on screen; the remaining risk is judges reading the anchors more strictly than we do (see the Gap column) |
+
+**What changed for A3:** the earlier cut showed streaming but never pressed Stop, so we scored A3 at 4. The final video adds a 6 s live clip between Task B and Task C (3:11–3:17): Stop is pressed mid-run, the sidebar reports "Cancelled. No files were changed.", and `git status` / `git diff --exit-code` confirm the workspace is untouched. To make room, the Task C settings shot was sped from 1.6× to 1.8× and the recap trimmed by 0.3 s; total 3:59.1, still under 4:00.
+
+**Verification state of the submission build:** live Task A, B and C through the extension on free models (cost $0); 21 offline unit tests and 8 VS Code extension-host tests; the `.vsix` installs and activates in a fresh VS Code profile (release v0.2.0).
+
+---
+
+## History
 
 **v2 update — 20 November 2026:** The extension was rewritten (see [report 21](21-harness-v2.md)). Live on free models through TrueForge: Task A passed in 2 model calls (1.4 s); Task C showed both automatic same-session fallback and a clear error, with a clean worktree. Task B produced a correct implementation and docs across 3 files, but its new test failed (58/59) and the run stopped before verification. Suites: 15 offline unit tests and 7 VS Code extension-host tests passed. The rows below describe v1 and are kept for history.
 

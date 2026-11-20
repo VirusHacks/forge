@@ -82,18 +82,18 @@ Agent definitions are in `trueforge/agents/`.
 
 ## 6. Scorecard
 
-Timestamps refer to the demo video (3:54).
+Timestamps refer to the demo video (3:59).
 
 | Criterion | Video | Claim |
 |---|---|---|
 | A1 Inline edit | 0:51–1:10 | Select → ⌘⌥K → typed instruction → diff in the editor about 2 s later; per-hunk untick/re-tick; Accept; `FLASK_DEBUG=off` prints `False` (1:10) |
 | A2 Agent mode | 1:19–2:18 | One request, no file names: the agent finds and edits `cli.py`, `test_cli.py` and `cli.rst`; 59 tests pass (2:35); `git status` shows those 3 files (2:56) |
-| A3 Streaming and cancellation | 1:43–2:16 | Tool calls and banners stream live from TrueForge events; the editor stays responsive during retries (3:23); Stop/Cancel available. A live cancel is not shown in the video |
+| A3 Streaming and cancellation | 1:43–2:16 · 3:11–3:17 | Tool calls and banners stream live from TrueForge events; live cancel: Stop pressed mid-run (3:12) → "Cancelled. No files were changed." → `git status` empty, `git diff` exit 0 (3:15); the editor stays responsive during retries (3:28) |
 | B1 Context assembly | 0:18 · 1:25–1:43 | RepoMap code graph (edges verified at call sites) + BM25 → a budgeted pack before the first model call: 4 files, a reason each, 4.8k / 7k tokens |
 | B2 Diff safety | 0:59 · 2:18–3:02 | Edits staged in memory; per-hunk review and in-diff CodeLens; nothing written before Accept; Undo restores all files (git clean at 3:02) |
-| B3 Resilience | 3:23–3:43 | Unreachable endpoint → backoff 2 s, then 4 s → automatic fallback to the second model in the same session; `git status` empty (3:40) |
+| B3 Resilience | 3:28–3:48 | Unreachable endpoint → backoff 2 s, then 4 s → automatic fallback to the second model in the same session; `git status` empty (3:45) |
 | B4 TrueForge depth | 0:11 · 1:43 · 2:23 | 9 MCP tools; approval-gated `submit_for_review` drives the review (live in TrueForge, 2:23–2:30); deferred tool loading and compaction; same-session fallback; session shown (3:04) |
-| C1 Video | 0:45 · 1:19 · 3:11 | A, B and C in order, each verified on screen |
+| C1 Video | 0:45 · 1:19 · 3:17 | A, B and C in order, each verified on screen; a live cancel between B and C (3:11) |
 | C2 Write-up | n/a | This document |
 
 ## 7. Tools used

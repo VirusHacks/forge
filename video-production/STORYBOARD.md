@@ -1,12 +1,14 @@
-# Storyboard (v3 · final, 3:54.1)
+# Storyboard (v4 · final, 3:59.1)
 
-v3 adds a cold open, a "why we built it this way" scene (graph engineering, our nine MCP tools, measured impact), and a clean cut into the Task B terminal (no stale output, no mid-shot zoom). It also tightens the silent stretches. Total silence dropped from 69 s to under 35 s; what remains is reading time on verification output. Earlier cuts are kept as `…_v1.mp4`, `…_v2.mp4` and `…_v3.mp4`.
+v4 adds a **live cancellation** (3:11–3:17) between Task B and Task C: a real run of the Task B request, Stop pressed after three tool calls, the sidebar's "Cancelled. No files were changed.", then `git status --short && git diff --exit-code` → "cancelled: nothing written" (`recordings/cancel-take1`, `tools/cancel.mjs`, overlay `compositions/ovX.html`). To stay under 4:00, the Task C settings shot runs at 1.8× instead of 1.6× and the recap is 8.7 s. v3 is kept as `…_v4.mp4`.
+
+v3 adds a cold open, a "why we built it this way" scene (graph engineering, our nine MCP tools, measured impact), and a clean cut into the Task B terminal (no stale output, no mid-shot zoom). It also tightens the silent stretches. Total silence dropped from 69 s to under 35 s; what remains is reading time on verification output.
 
 **Final polish:**
 - The cold open and both git checks show the window at **normal size, with no zoom**. That means no upscaling, so the pixels stay sharp.
 - In the git checks the full-size window slides up so the git lines sit mid-frame, with the caption below.
 - Green outline boxes point at the evidence in each opening shot.
-- Timestamps are unchanged, so JUDGING_EVIDENCE_MATRIX.md still applies.
+- JUDGING_EVIDENCE_MATRIX.md carries the v4 timestamps.
 
 | Time | Section | Picture | What it proves |
 |---|---|---|---|
@@ -14,8 +16,9 @@ v3 adds a cold open, a "why we built it this way" scene (graph engineering, our 
 | 0:11–0:45 | Why it's built this way | TrueForge runs the loop ↔ any model. Forge's side:<br>• the editor card<br>• **graph engineering:** a RepoMap graph of callers → FlaskGroup → AppGroup/tests; edges turn green as "verified at call site"; budget bar 4.8k / 7k<br>• **nine MCP tools we built:** search/read, graph lookup, staging, sandbox, approval-gated submit, each highlighted as named<br>• **measured impact:** 85 → ~25 model calls, 1.22M → ~0.39M tokens | B1/B4 design decisions and their effect |
 | 0:45–1:19 | **Task A** | Real-time submit → diff; per-hunk untick/re-tick; Accept; terminal zoom | `False` (1:09.8); the case table (1:14.4) |
 | 1:19–3:11 | **Task B** | Request → "Assembling context…" → labelled pause explaining the pack → 5× run with the live run-log ticker → review → live TrueForge approval → Accept → TrueForge response → clean cut to the zoomed terminal → verification → the session page | 59 passed; `config` in help; masked JSON incl. SECRET_KEY; git shows 3 files; Undo; session |
-| 3:11–3:45 | **Task C** | Fallback setting; `curl` refused; repeat Task A; retries after 2 s and 4 s; automatic fallback; diff; Reject | `git status` empty; "workspace unchanged" |
-| 3:45–3:54 | Recap | Five rows | — |
+| 3:11–3:17 | **Stop / cancel** | Live Task B run → Stop after 3 tool calls → "Cancelled. No files were changed." → git command and output | `git status` empty, `git diff` exit 0 (3:15) |
+| 3:17–3:50 | **Task C** | Fallback setting; `curl` refused; repeat Task A; retries after 2 s and 4 s; automatic fallback; diff; Reject | `git status` empty; "workspace unchanged" |
+| 3:50–3:59 | Recap | Five rows | — |
 
 All callouts and narration lines are anchored to recorded events through the clips' EDLs:
 - `tools/gen_index3.py`, `tools/gen_ovB.py`, `tools/pin_ac.py`
@@ -41,4 +44,5 @@ Badges:
 |---|---|
 | A | Select/keybinding at 1.3×; typing at 2.2×; the submit → diff → accept stretch at 1×; scrolling and terminal at 4×; command typing at 2–3×; output at 1× |
 | B | Typing at 2.3×. Submit → card at 0.5×. A **17 s labelled freeze** on the card. The run at **5×**, one continuous segment, from instruction to review. Review diffs at 3×; TrueForge approval at 1.6×; Accept at 0.8×; a cut into the zoomed terminal after `clear`; terminal at 1.2–2.2×; scrollback at 1.75×; the post-run session page at 3.1× |
-| C | Configuration at 1.6×; typing at 4×; submit → retries → fallback → diff and the reject at 1×; typing the git commands at 1.6–4×; outputs at 1× |
+| Cancel | Run in progress, Stop and the cancelled state at 1×; git command typing at 3.5×; output at 1× |
+| C | Configuration at 1.8×; typing at 4×; submit → retries → fallback → diff and the reject at 1×; typing the git commands at 1.6–4×; outputs at 1× |

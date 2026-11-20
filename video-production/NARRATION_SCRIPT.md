@@ -23,8 +23,9 @@ Spoken from a developer's point of view. Kokoro-82M `af_heart`, generated locall
 | 2:50.04 | 2:53.09 | Scrolling up the same output, the secret key is masked too. |
 | 2:56.17 | 3:00.84 | Git shows exactly three changed files, and one click on Undo restores them all. |
 | 3:04.40 | 3:10.54 | Here is the True Forge session itself: my request with Forge's context pack, then each turn's tool calls. |
-| 3:11.10 | 3:17.67 | Task C. The model endpoint refuses connections, a second model is set as fallback, and I repeat Task A. |
-| 3:20.96 | 3:30.24 | Forge's router retries with backoff, two seconds, then four, while I keep scrolling. Then it switches models automatically, in the same session, and the diff arrives. |
-| 3:32.06 | 3:36.26 | The fallback's diff is fine, but this test is about safety, so I reject it. |
-| 3:39.91 | 3:42.77 | Git confirms the failure changed nothing in the workspace. |
-| 3:45.31 | 3:52.97 | That's Forge: True Forge's loop, plus deliberate context, safe edits, real validation, and graceful failure. From team Hustlers. |
+| 3:10.95 | 3:15.49 | Stopping is safe, too. I press Stop mid-run, and git confirms nothing was written. |
+| 3:17.30 | 3:23.87 | Task C. The model endpoint refuses connections, a second model is set as fallback, and I repeat Task A. |
+| 3:26.36 | 3:35.64 | Forge's router retries with backoff, two seconds, then four, while I keep scrolling. Then it switches models automatically, in the same session, and the diff arrives. |
+| 3:37.46 | 3:41.66 | The fallback's diff is fine, but this test is about safety, so I reject it. |
+| 3:45.31 | 3:48.17 | Git confirms the failure changed nothing in the workspace. |
+| 3:50.71 | 3:58.37 | That's Forge: True Forge's loop, plus deliberate context, safe edits, real validation, and graceful failure. From team Hustlers. |

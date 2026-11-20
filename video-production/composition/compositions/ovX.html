@@ -1,0 +1,41 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; pointer-events: none; font-family: Inter, sans-serif; }
+    .ovx-chip { position: absolute; left: 1290px; top: 112px; padding: 14px 22px; border-radius: 14px; background: #0b0f16ee; border: 1.5px solid #f85149; color: #e6edf3; font-size: 26px; font-weight: 700; }
+    .ovx-chip span { display: block; font-size: 22px; font-weight: 400; color: #9da7b3; margin-top: 4px; font-family: "JetBrains Mono", monospace; }
+    .ovx-box { position: absolute; border: 3px solid #e3b341; border-radius: 12px; box-shadow: 0 0 26px #e3b34166; }
+    .ovx-tag { position: absolute; padding: 8px 14px; border-radius: 10px; font-size: 25px; font-weight: 700; color: #0b0f16; background: #e3b341; white-space: nowrap; }
+    .red { border-color: #f85149 !important; box-shadow: 0 0 26px #f8514966 !important; }
+    .tag-red { background: #f85149; color: #fff; }
+    .green { border-color: #3fb950 !important; box-shadow: 0 0 26px #3fb95066 !important; }
+    .tag-green { background: #3fb950; }
+  </style>
+  <!-- Live cancellation (recordings/cancel-take1): a real Task B run, Stop pressed after 3 tool calls.
+       Times are edited seconds in assets/clips/cancel.mp4 (cancel.edl.json): Stop click = 1.97, "Cancelled" = 2.4, git output = 4.45. -->
+  <div id="root" data-composition-id="ovX" data-width="1920" data-height="1080">
+    <div id="ovx-chip" class="ovx-chip clip" data-start="0.10" data-duration="3.40">STOP · mid-run<span>live Task B run · 3 tool calls in</span></div>
+
+    <div id="ovx-stop" class="clip" data-start="0.60" data-duration="1.75">
+      <div class="ovx-box red" style="left:500px; top:972px; width:104px; height:56px;"></div>
+      <div class="ovx-tag tag-red" style="left:630px; top:982px;">Stop, while the agent is working</div>
+    </div>
+    <div id="ovx-cancel" class="clip" data-start="2.40" data-duration="3.80">
+      <div class="ovx-box green" style="left:70px; top:776px; width:530px; height:46px;"></div>
+    </div>
+    <div id="ovx-ctag" class="clip" data-start="2.40" data-duration="1.20">
+      <div class="ovx-tag tag-green" style="left:630px; top:780px;">Cancelled · no files were changed</div>
+    </div>
+    <div id="ovx-git" class="clip" data-start="4.45" data-duration="1.75">
+      <div class="ovx-box green" style="left:632px; top:798px; width:730px; height:58px;"></div>
+      <div class="ovx-tag tag-green" style="left:632px; top:880px; font-size:28px;">git status: empty · git diff: exit 0 → nothing written</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    const pop = (sel, at) => tl.fromTo(`${sel} > *`, { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", stagger: 0.08 }, at);
+    tl.fromTo("#ovx-chip", { opacity: 0, x: 30 }, { opacity: 1, x: 0, duration: 0.4, ease: "power3.out" }, 0.10);
+    pop("#ovx-stop", 0.60); pop("#ovx-cancel", 2.40); pop("#ovx-ctag", 2.40); pop("#ovx-git", 4.45);
+    tl.to({}, { duration: 0.1 }, 6.10);
+    window.__timelines["ovX"] = tl;
+  </script>
+</template>

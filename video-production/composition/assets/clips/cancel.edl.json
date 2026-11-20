@@ -1,0 +1,41 @@
+{
+ "segments": [
+  {
+   "edited_start": 0.0,
+   "edited_end": 2.0,
+   "source": "../recordings/cancel-take1/raw.mp4",
+   "rec_start": 18.6,
+   "rec_end": 20.6,
+   "speed": 1,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 2.0,
+   "edited_end": 3.6,
+   "source": "../recordings/cancel-take1/raw.mp4",
+   "rec_start": 20.6,
+   "rec_end": 22.2,
+   "speed": 1,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 3.6,
+   "edited_end": 4.4,
+   "source": "../recordings/cancel-take1/raw.mp4",
+   "rec_start": 25.0,
+   "rec_end": 27.8,
+   "speed": 3.5,
+   "hold_s": 0
+  },
+  {
+   "edited_start": 4.4,
+   "edited_end": 6.2,
+   "source": "../recordings/cancel-take1/raw.mp4",
+   "rec_start": 27.8,
+   "rec_end": 29.6,
+   "speed": 1,
+   "hold_s": 0
+  }
+ ],
+ "duration": 6.2
+}

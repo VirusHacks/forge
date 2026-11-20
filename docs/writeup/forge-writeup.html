@@ -78,7 +78,7 @@
       <div class="kicker">TrueFoundry Forge-a-thon · Techfest IIT Bombay · Round 1 write-up</div>
       <h1>Forge — an editor-native coding agent on TrueForge</h1>
     </div>
-    <div class="meta">Team <b>Husttlers</b><br><a href="https://github.com/VirusHacks/forge">github.com/VirusHacks/forge</a><br>Demo video · 3:54</div>
+    <div class="meta">Team <b>Husttlers</b><br><a href="https://github.com/VirusHacks/forge">github.com/VirusHacks/forge</a><br>Demo video · 3:59</div>
   </div>
 
   <p class="lede">Forge is a VS Code extension whose agent loop runs on TrueForge. It <b>finds the right code itself</b>, changes several files you never named, <b>tests its own work</b>, and lets you accept or reject every hunk before anything is saved — and it <b>keeps working when the model fails</b>. We built it for free-tier models, so every choice aims at fewer, smaller, safer requests.</p>
@@ -123,12 +123,12 @@
   <h3>TrueForge features we rely on</h3>
   <table>
     <tr><th style="width:24%">Feature</th><th>How Forge uses it</th><th style="width:15%">In the video</th></tr>
-    <tr><td><b>Sessions · streaming</b></td><td>Every run is a TrueForge session; text and tool calls stream into the sidebar; Stop cancels the session.</td><td><span class="t">1:43–2:16</span></td></tr>
+    <tr><td><b>Sessions · streaming</b></td><td>Every run is a TrueForge session; text and tool calls stream into the sidebar; Stop cancels the session.</td><td><span class="t">1:43–2:16 · 3:12</span></td></tr>
     <tr><td><b>MCP tools</b></td><td>Nine editor tools — search, read, code graph, stage, view, discard, run a command, submit, list files.</td><td><span class="t">0:11 · 1:43</span></td></tr>
     <tr><td><b>Tool approval</b></td><td><code>requireApprovalForTools</code> on <code>submit_for_review</code>: TrueForge's approval request <i>is</i> the diff review.</td><td><span class="t">2:22–2:30</span></td></tr>
     <tr><td><b>Deferred tool loading</b></td><td>Five tools preloaded; the rest load on demand via <code>list_tools</code> — smaller prompts on free tiers.</td><td><span class="t">1:52</span></td></tr>
     <tr><td><b>Context compaction</b></td><td>Long runs are compacted at 18k tokens (5.2k on tight tiers); the recorded run compacted twice.</td><td><span class="t">1:43–2:16</span></td></tr>
-    <tr><td><b>Same-session fallback</b></td><td><code>sessions.update</code> + <code>previousTurnId</code> swap a failing model inside the live session, keeping every tool result.</td><td><span class="t">1:47 · 3:29</span></td></tr>
+    <tr><td><b>Same-session fallback</b></td><td><code>sessions.update</code> + <code>previousTurnId</code> swap a failing model inside the live session, keeping every tool result.</td><td><span class="t">1:47 · 3:34</span></td></tr>
   </table>
 
   <h3>Design decisions and trade-offs</h3>
@@ -206,12 +206,12 @@
     <tr><th style="width:16%">Criterion</th><th style="width:15%">Video</th><th style="width:47%">Claim</th><th>Verified on screen</th></tr>
     <tr><td><b>A1</b> Inline edit</td><td><span class="t">0:51–1:10</span></td><td>Select → ⌘⌥K → instruction → diff in ~2 s; per-hunk untick; Accept</td><td><code>False</code> printed <span class="t">1:10</span></td></tr>
     <tr><td><b>A2</b> Agent mode</td><td><span class="t">1:19–2:18</span></td><td>No files named → agent edits <code>cli.py</code>, <code>test_cli.py</code>, <code>cli.rst</code></td><td>59 passed <span class="t">2:35</span></td></tr>
-    <tr><td><b>A3</b> Streaming</td><td><span class="t">1:43–2:16</span></td><td>Tool calls stream live; editor stays responsive; Stop always available</td><td>editor used <span class="t">3:23</span></td></tr>
+    <tr><td><b>A3</b> Streaming</td><td><span class="t">1:43–2:16 · 3:12</span></td><td>Tool calls stream live; <b>Stop mid-run</b> → “Cancelled. No files were changed.”</td><td>git clean <span class="t">3:15</span></td></tr>
     <tr><td><b>B1</b> Context</td><td><span class="t">0:18 · 1:25</span></td><td>BM25 + verified RepoMap graph → budgeted pack, 4 files with reasons</td><td>4.8k / 7k tokens</td></tr>
     <tr><td><b>B2</b> Diff safety</td><td><span class="t">0:59 · 2:18–3:02</span></td><td>Staged in memory; per-hunk review in sidebar and diff; <b>Undo</b></td><td>git clean <span class="t">3:02</span></td></tr>
-    <tr><td><b>B3</b> Resilience</td><td><span class="t">3:23–3:43</span></td><td>Dead endpoint → retry 2 s, 4 s → <b>automatic fallback</b>, no user action</td><td>git empty <span class="t">3:40</span></td></tr>
+    <tr><td><b>B3</b> Resilience</td><td><span class="t">3:28–3:48</span></td><td>Dead endpoint → retry 2 s, 4 s → <b>automatic fallback</b>, no user action</td><td>git empty <span class="t">3:45</span></td></tr>
     <tr><td><b>B4</b> TrueForge</td><td><span class="t">0:11 · 1:43 · 2:23</span></td><td>9 MCP tools; approval = review; <b>deferred tools + compaction</b></td><td>session <span class="t">3:04</span></td></tr>
-    <tr><td><b>C1</b> Video</td><td><span class="t">0:45 · 1:19 · 3:11</span></td><td>Tasks A, B, C in order, each verified; Task B session shown</td><td>3:54 total</td></tr>
+    <tr><td><b>C1</b> Video</td><td><span class="t">0:45 · 1:19 · 3:17</span></td><td>Tasks A, B, C in order, each verified; Task B session and a live cancel shown</td><td>3:59 total</td></tr>
     <tr><td><b>C2</b> Write-up</td><td>—</td><td>Architecture, context and budget, models, trade-offs, limitations</td><td>this document</td></tr>
   </table>
 
@@ -228,7 +228,6 @@
       <h2><span class="n">8</span> Limitations · next month</h2>
       <ul class="tight">
         <li><b>Free tiers are the ceiling.</b> Successful Task B runs took 25–65 model calls; some stopped when every provider hit its quota at once (partial work is then offered for review, flagged incomplete).</li>
-        <li><b>A live cancel is not in the video</b>; it is covered by tests in a real editor.</li>
         <li>The code graph is static: each edge is verified at its call site, but dynamic calls can be missed.</li>
         <li>The command sandbox is macOS-only; Windows is untested.</li>
       </ul>
